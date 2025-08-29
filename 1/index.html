@@ -7,6 +7,17 @@
   <link rel="stylesheet" href="../assets/style.css">
   <style>
     body { margin: 20px; font-family: Arial, sans-serif; }
+    .topbar { margin-bottom: 16px; }
+    .back {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #111;
+      background: #f7f7f7;
+    }
+    .back:hover { background: #eee; }
     h2 { margin: 20px 0 10px; }
     .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
     figure { margin: 0; }
@@ -15,6 +26,10 @@
   </style>
 </head>
 <body>
+
+  <div class="topbar">
+    <a class="back" href="../">← Back to Main</a>
+  </div>
 
   <!-- Part 1 -->
   <h2>Part 1: Selfie — The Wrong Way vs. The Right Way</h2>
