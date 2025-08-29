@@ -7,21 +7,24 @@
   <link rel="stylesheet" href="../assets/style.css">
   <style>
     body { margin: 20px; font-family: Arial, sans-serif; }
-    .wrap { max-width: 1040px; margin: 0 auto; }
+    .wrap { max-width: 900px; margin: 0 auto; }  /* a bit narrower overall */
     .topbar { margin-bottom: 16px; }
     .back {
       display: inline-block; padding: 8px 12px; border: 1px solid #ddd;
       border-radius: 8px; text-decoration: none; color: #111; background: #f7f7f7;
     }
     .back:hover { background: #eee; }
+
     h2 { margin: 20px 0 10px; }
+
+    /* smaller side-by-side images */
     .two {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 12px;
       justify-items: center;
     }
-    figure { margin: 0; max-width: 480px; }
+    figure { margin: 0; max-width: 360px; }  /* ↓ cap each image block to 360px */
     img { width: 100%; height: auto; display: block; }
     figcaption { margin-top: 6px; font-size: 14px; color: #555; text-align: center; }
   </style>
@@ -61,7 +64,7 @@
 
     <!-- Part 3 -->
     <h2>Part 3: The Dolly Zoom</h2>
-    <figure style="max-width: 720px; margin: 0;">
+    <figure style="max-width: 480px; margin: 0;">
       <img src="./media/dolly.gif" alt="Dolly zoom GIF">
     </figure>
 
