@@ -1,16 +1,150 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <meta charset="utf-8">
-  <title>Project 1</title>
-  <link rel="stylesheet" href="../assets/style.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Project 1 • Perspective & Dolly Zoom</title>
+  <link rel="stylesheet" href="../assets/style.css"/>
+  <style>
+    /* Page-specific helpers */
+    .toc a{display:block; margin:4px 0; text-decoration:none}
+    .compare{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+    .compare figure{margin:0}
+    .compare img{width:100%; border-radius:12px; border:1px solid rgba(255,255,255,.08)}
+    .caption{color:var(--muted); font-size:14px; margin-top:6px}
+    .callout{background:rgba(122,162,255,.10); border:1px solid rgba(122,162,255,.35); padding:12px; border-radius:10px; margin:12px 0}
+    details{background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); padding:10px 12px; border-radius:10px}
+    details > summary{cursor:pointer; color:var(--accent); font-weight:600}
+    .checklist li{margin-bottom:6px}
+    .media-note{font-size:14px; color:var(--muted); margin-top:8px}
+    .grid3{display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:12px}
+    video, .gifwrap img{width:100%; border-radius:12px; border:1px solid rgba(255,255,255,.08)}
+  </style>
 </head>
 <body>
-  <p><a href="../">← Back to main</a></p>
-  <h1>Project 1: Title</h1>
-  <p>Short description, method, and results.</p>
+  <div class="container">
+    <p class="breadcrumbs"><a href="../">← Back to Portfolio</a></p>
 
-  <h2>Results</h2>
-  <img src="./media/img1.jpg" alt="result" style="max-width:100%">
+    <section class="card">
+      <h1>Project 1: Selfie Perspective, Architectural Compression, & Dolly Zoom</h1>
+      <p class="muted">CS180/280A — Demonstrating how camera position vs. focal length changes perspective, and recreating the classic “Vertigo” dolly zoom.</p>
+
+      <h2>Table of Contents</h2>
+      <nav class="toc">
+        <a href="#part1">Part 1 — Close Portrait: Wrong vs. Right</a>
+        <a href="#part2">Part 2 — Architectural Perspective Compression</a>
+        <a href="#part3">Part 3 — Dolly Zoom (GIF/Video + Stills)</a>
+        <a href="#discussion">Discussion & Takeaways</a>
+      </nav>
+
+      <div class="callout">
+        <strong>Submission tips:</strong> keep filenames short (no spaces), include alt text, and add 2–4 sentences of reflection per section.
+      </div>
+    </section>
+
+    <!-- ==================== PART 1 ==================== -->
+    <section id="part1" class="card">
+      <h2>Part 1 — Selfie: The Wrong Way vs. The Right Way</h2>
+      <p>Close vs. stepped-back + zoomed portraits at roughly the same framing to show perspective effects.</p>
+
+      <div class="compare" style="margin-top:8px">
+        <figure>
+          <img src="./media/selfie_close.jpg" alt="Close portrait—wide/phone at arm’s length">
+          <figcaption class="caption"><strong>Wrong (close & wide):</strong> Notice exaggerated nose, receding ears, and face distortion.</figcaption>
+        </figure>
+        <figure>
+          <img src="./media/selfie_tele.jpg" alt="Stepped back, zoomed portrait at similar face size">
+          <figcaption class="caption"><strong>Right (step back & zoom):</strong> Flatter facial features, more natural proportions.</figcaption>
+        </figure>
+      </div>
+
+      <details style="margin-top:12px">
+        <summary>My setup & EXIF (optional)</summary>
+        <ul class="checklist">
+          <li>Location / lighting: e.g., north-facing window, overcast daylight</li>
+          <li>Shot 1: ~26mm equiv., distance ~0.5m</li>
+          <li>Shot 2: ~85mm equiv., distance ~2.5m</li>
+          <li>Both framed to similar head size; exposure kept similar</li>
+        </ul>
+      </details>
+
+      <h3>Reflection (2–4 sentences)</h3>
+      <p class="muted">Explain why backing up and zooming reduces perspective exaggeration. Tie to rays/geometry: perspective depends on camera position, not focal length alone; focal length just crops field of view.</p>
+    </section>
+
+    <!-- ==================== PART 2 ==================== -->
+    <section id="part2" class="card">
+      <h2>Part 2 — Architectural Perspective Compression</h2>
+      <p>Telephoto from far away vs. wide from closer, matched framing on an urban corridor or pathway.</p>
+
+      <div class="compare" style="margin-top:8px">
+        <figure>
+          <img src="./media/arch_tele.jpg" alt="Telephoto from far away—flattened look">
+          <figcaption class="caption"><strong>Far + zoom (compressed):</strong> Background appears closer; depth looks flattened.</figcaption>
+        </figure>
+        <figure>
+          <img src="./media/arch_wide.jpg" alt="Wide from close—expanded perspective">
+          <figcaption class="caption"><strong>Near + wide (expanded):</strong> Lines diverge; sense of depth increases.</figcaption>
+        </figure>
+      </div>
+
+      <h3>Reflection (2–4 sentences)</h3>
+      <p class="muted">Discuss how changing camera distance alters relative scale of near/far objects; matching framing isolates the perspective change.</p>
+    </section>
+
+    <!-- ==================== PART 3 ==================== -->
+    <section id="part3" class="card">
+      <h2>Part 3 — The Dolly Zoom</h2>
+      <p>Create a dolly zoom by moving the camera while inversely changing focal length to keep the subject’s size constant and the background “breathing.”</p>
+
+      <!-- Prefer MP4 for size; GIF fallback is fine if required -->
+      <div class="grid3" style="margin-top:8px">
+        <div class="gifwrap">
+          <!-- If you made a video: -->
+          <video src="./media/dolly.mp4" controls muted loop playsinline></video>
+          <!-- If you only have a GIF, swap the <video> above for:
+          <img src="./media/dolly.gif" alt="Dolly zoom animation">
+          -->
+          <div class="media-note">Animation: dolly zoom (looped)</div>
+        </div>
+
+        <figure>
+          <img src="./media/dolly_stills_01.jpg" alt="Dolly zoom still 1">
+          <figcaption class="caption">Key frame A (near + wide)</figcaption>
+        </figure>
+
+        <figure>
+          <img src="./media/dolly_stills_02.jpg" alt="Dolly zoom still 2">
+          <figcaption class="caption">Key frame B (far + tele)</figcaption>
+        </figure>
+      </div>
+
+      <details style="margin-top:12px">
+        <summary>Capture notes (recommended)</summary>
+        <ul class="checklist">
+          <li>Subject framed constant (e.g., shoulder-up) while you move.</li>
+          <li>Increase focal length as you step back (or decrease as you move forward).</li>
+          <li>Use markers on the ground for consistent steps; keep horizon steady.</li>
+          <li>Shoot stills (4–8+) or short video; stabilize if possible.</li>
+        </ul>
+      </details>
+
+      <h3>Reflection (2–4 sentences)</h3>
+      <p class="muted">Why does the background stretch/Compress while the subject stays the same? Relate to perspective change from camera position vs. FOV cropping from focal length.</p>
+    </section>
+
+    <!-- ==================== DISCUSSION ==================== -->
+    <section id="discussion" class="card">
+      <h2>Discussion & Takeaways</h2>
+      <ul>
+        <li><strong>Perspective is about position:</strong> moving the camera changes relative geometry; focal length changes FOV/cropping.</li>
+        <li><strong>Portrait tip:</strong> back up, zoom in (~70–105mm equiv.) for natural proportions.</li>
+        <li><strong>Architecture tip:</strong> choose position to control convergence and background scale.</li>
+        <li><strong>Dolly zoom:</strong> hold subject size constant while changing position + focal length inversely.</li>
+      </ul>
+    </section>
+
+    <p class="footer">Place all media in <code>1/media/</code> and reference with <code>./media/filename.ext</code>. For large clips, prefer MP4 over GIF.</p>
+  </div>
 </body>
 </html>
