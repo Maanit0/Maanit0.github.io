@@ -7,59 +7,64 @@
   <link rel="stylesheet" href="../assets/style.css">
   <style>
     body { margin: 20px; font-family: Arial, sans-serif; }
+    .wrap { max-width: 1040px; margin: 0 auto; }
     .topbar { margin-bottom: 16px; }
     .back {
-      display: inline-block;
-      padding: 8px 12px;
-      border: 1px solid #ddd;
-      border-radius: 8px;
-      text-decoration: none;
-      color: #111;
-      background: #f7f7f7;
+      display: inline-block; padding: 8px 12px; border: 1px solid #ddd;
+      border-radius: 8px; text-decoration: none; color: #111; background: #f7f7f7;
     }
     .back:hover { background: #eee; }
     h2 { margin: 20px 0 10px; }
-    .two { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
-    figure { margin: 0; }
+    .two {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 12px;
+      justify-items: center;
+    }
+    figure { margin: 0; max-width: 480px; }
     img { width: 100%; height: auto; display: block; }
-    figcaption { margin-top: 6px; font-size: 14px; color: #555; }
+    figcaption { margin-top: 6px; font-size: 14px; color: #555; text-align: center; }
   </style>
 </head>
 <body>
+  <div class="wrap">
 
-  <div class="topbar">
-    <a class="back" href="../">← Back to Main</a>
+    <div class="topbar">
+      <a class="back" href="../">← Back to Main</a>
+    </div>
+
+    <!-- Part 1 -->
+    <h2>Part 1: Selfie — The Wrong Way vs. The Right Way</h2>
+    <div class="two">
+      <figure>
+        <img src="./media/selfie_close.jpg" alt="Close selfie">
+        <figcaption>24mm, closer distance</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/selfie_tele.jpg" alt="Stepped back, zoomed selfie">
+        <figcaption>48mm, further distance</figcaption>
+      </figure>
+    </div>
+
+    <!-- Part 2 -->
+    <h2>Part 2: Architectural Perspective Compression</h2>
+    <div class="two">
+      <figure>
+        <img src="./media/arch_close_24mm.jpg" alt="Architecture close wide">
+        <figcaption>24mm, closer distance</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/arch_far_48mm.jpg" alt="Architecture far tele">
+        <figcaption>48mm, further distance</figcaption>
+      </figure>
+    </div>
+
+    <!-- Part 3 -->
+    <h2>Part 3: The Dolly Zoom</h2>
+    <figure style="max-width: 720px; margin: 0;">
+      <img src="./media/dolly.gif" alt="Dolly zoom GIF">
+    </figure>
+
   </div>
-
-  <!-- Part 1 -->
-  <h2>Part 1: Selfie — The Wrong Way vs. The Right Way</h2>
-  <div class="two">
-    <figure>
-      <img src="./media/selfie_close.jpg" alt="Close selfie">
-      <figcaption>24mm, closer distance</figcaption>
-    </figure>
-    <figure>
-      <img src="./media/selfie_far.jpg" alt="Stepped back, zoomed selfie">
-      <figcaption>48mm, further distance</figcaption>
-    </figure>
-  </div>
-
-  <!-- Part 2 -->
-  <h2>Part 2: Architectural Perspective Compression</h2>
-  <div class="two">
-    <figure>
-      <img src="./media/arch_close.jpg" alt="Architecture close wide">
-      <figcaption>24mm, closer distance</figcaption>
-    </figure>
-    <figure>
-      <img src="./media/arch_far.jpg" alt="Architecture far tele">
-      <figcaption>48mm, further distance</figcaption>
-    </figure>
-  </div>
-
-  <!-- Part 3 -->
-  <h2>Part 3: The Dolly Zoom</h2>
-  <img src="./media/dolly.gif" alt="Dolly zoom GIF">
-
 </body>
 </html>
