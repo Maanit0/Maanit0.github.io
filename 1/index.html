@@ -7,7 +7,7 @@
   <link rel="stylesheet" href="../assets/style.css">
   <style>
     body { margin: 20px; font-family: Arial, sans-serif; }
-    .wrap { max-width: 900px; margin: 0 auto; }  /* a bit narrower overall */
+    .wrap { max-width: 900px; margin: 0 auto; }
     .topbar { margin-bottom: 16px; }
     .back {
       display: inline-block; padding: 8px 12px; border: 1px solid #ddd;
@@ -17,14 +17,15 @@
 
     h2 { margin: 20px 0 10px; }
 
-    /* smaller side-by-side images */
+    /* tighter horizontal spacing between images */
     .two {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
+      column-gap: 6px;   /* horizontal gap */
+      row-gap: 12px;     /* vertical gap */
       justify-items: center;
     }
-    figure { margin: 0; max-width: 280px; }  /* ↓ cap each image block to 360px */
+    figure { margin: 0; max-width: 360px; }
     img { width: 100%; height: auto; display: block; }
     figcaption { margin-top: 6px; font-size: 14px; color: #555; text-align: center; }
   </style>
