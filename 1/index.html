@@ -6,28 +6,98 @@
   <title>Project 0</title>
   <link rel="stylesheet" href="../assets/style.css">
   <style>
-    body { margin: 20px; font-family: Arial, sans-serif; }
-    .wrap { max-width: 900px; margin: 0 auto; }
-    .topbar { margin-bottom: 16px; }
-    .back {
-      display: inline-block; padding: 8px 12px; border: 1px solid #ddd;
-      border-radius: 8px; text-decoration: none; color: #111; background: #f7f7f7;
+    body {
+      margin: 20px;
+      font-family: Arial, sans-serif;
+      background-color: #fff;
+      color: #111;
     }
-    .back:hover { background: #eee; }
 
-    h2 { margin: 20px 0 10px; }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+    }
 
-    /* tighter horizontal spacing between images */
+    .topbar {
+      margin-bottom: 16px;
+    }
+
+    .back {
+      display: inline-block;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      text-decoration: none;
+      color: #111;
+      background: #f7f7f7;
+      transition: background 0.2s ease;
+    }
+
+    .back:hover {
+      background: #eee;
+    }
+
+    /* Header block for project info */
+    .header {
+      margin-bottom: 24px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ccc;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 26px;
+    }
+
+    .header p {
+      margin: 2px 0;
+      font-size: 14px;
+      color: #444;
+    }
+
+    h2 {
+      margin: 24px 0 10px;
+    }
+
+    /* Tighter horizontal spacing between images */
     .two {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      column-gap: 6px;   /* horizontal gap */
-      row-gap: 12px;     /* vertical gap */
+      column-gap: 6px;
+      row-gap: 12px;
       justify-items: center;
     }
-    figure { margin: 0; max-width: 360px; }
-    img { width: 100%; height: auto; display: block; }
-    figcaption { margin-top: 6px; font-size: 14px; color: #555; text-align: center; }
+
+    figure {
+      margin: 0;
+      max-width: 360px;
+    }
+
+    img {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 4px;
+    }
+
+    figcaption {
+      margin-top: 6px;
+      font-size: 14px;
+      color: #555;
+      text-align: center;
+    }
+
+    /* Center the GIF */
+    .gif-center {
+      display: flex;
+      justify-content: center;
+      margin-top: 12px;
+    }
+
+    .gif-center figure {
+      max-width: 480px;
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -35,6 +105,15 @@
 
     <div class="topbar">
       <a class="back" href="../">← Back to Main</a>
+    </div>
+
+    <!-- Project Info -->
+    <div class="header">
+      <h1>CS180: Project 0 — Becoming Friends with Your Camera</h1>
+      <p><strong>Name:</strong> Maanit Sharma</p>
+      <p><strong>SID:</strong> 303XXXXXXX</p>
+      <p><strong>Course:</strong> CS180: Intro to Computer Vision & Computational Photography</p>
+      <p><strong>Semester:</strong> Fall 2025</p>
     </div>
 
     <!-- Part 1 -->
@@ -65,9 +144,11 @@
 
     <!-- Part 3 -->
     <h2>Part 3: The Dolly Zoom</h2>
-    <figure style="max-width: 480px; margin: 0;">
-      <img src="./media/180Proj1.gif" alt="Dolly zoom GIF">
-    </figure>
+    <div class="gif-center">
+      <figure>
+        <img src="./media/180Proj1.gif" alt="Dolly zoom GIF">
+      </figure>
+    </div>
 
   </div>
 </body>
