@@ -124,7 +124,7 @@
         <ul>
           <li><strong>Metrics tested:</strong> L2 (squared‑error), L1 (sum of absolute differences), and NCC (normalized cross‑correlation).</li>
           <li><strong>Selection rule:</strong> choose the shift that minimizes L1/L2 or maximizes NCC.</li>
-          <li><strong>What I use most:</strong> L1, because the three channels often differ in brightness/contrast; L1’s absolute‑difference
+          <li><strong>What I use for final results:</strong> L1, because the three channels often differ in brightness/contrast; L1’s absolute‑difference
             error is noticeably more stable than L2/NCC under those conditions.</li>
           <li><strong>Finalize:</strong> apply the chosen shifts to the <em>uncropped</em> R and G, then stack into an RGB image.</li>
         </ul>
