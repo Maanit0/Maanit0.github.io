@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CS180 Project 1 — Colorizing the Prokudin‑Gorskii Collection • Maanit Sharma</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --text: #0f172a;
+      --muted: #475569;
+      --border: #e2e8f0;
+      --subtle: #f8fafc;
+      --accent: #2563eb;
+      --code: #f6f8fa;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      line-height: 1.6;
+      color: var(--text);
+      background: var(--bg);
+    }
+    .wrap { max-width: 1200px; margin: 0 auto; padding: 24px 16px; }
+    header.wrap { padding-top: 32px; padding-bottom: 8px; }
+    .header-row { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+    h1 { font-size: 1.9rem; margin: 0 0 4px; letter-spacing: -0.02em; }
+    .meta { color: var(--muted); font-size: 0.95rem; }
+    .badge { display:inline-block; padding: 6px 10px; border-radius: 999px; border: 1px solid var(--border); color: var(--muted); text-decoration: none; }
+
+    .grid { display: grid; grid-template-columns: 260px 1fr; gap: 24px; }
+    @media (max-width: 900px) { .grid { grid-template-columns: 1fr; } }
+
+    aside { position: sticky; top: 16px; align-self: start; background: #fff; border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+    aside h2 { font-size: 1rem; margin: 0 0 8px; letter-spacing: 0.02em; color: var(--muted); }
+    nav a { display:block; padding: 6px 8px; border-radius: 8px; color: var(--text); text-decoration: none; font-size: 0.95rem; }
+    nav a:hover { background: var(--subtle); }
+    nav a.active { background: #eef2ff; border: 1px solid #c7d2fe; }
+
+    main section { padding: 24px; border: 1px solid var(--border); border-radius: 12px; background: #fff; margin-bottom: 24px; }
+    section h2 { margin-top: 0; font-size: 1.35rem; }
+    section h3 { margin-top: 1.2em; font-size: 1.1rem; }
+
+    .callout { background: var(--subtle); border-left: 4px solid var(--accent); padding: 12px 12px; border-radius: 10px; }
+
+    .figure-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    figure { margin: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
+    figure img { width: 100%; display: block; }
+    figcaption { padding: 8px 10px; color: var(--muted); font-size: 0.92rem; border-top: 1px solid var(--border); }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; }
+    th { background: var(--subtle); }
+
+    code, pre { background: var(--code); border-radius: 8px; }
+    pre { padding: 12px; overflow: auto; }
+    .small { color: var(--muted); font-size: 0.92rem; }
+    .todo { background: #fff7ed; border: 1px dashed #fdba74; padding: 8px 10px; border-radius: 8px; display: inline-block; }
+
+    footer { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 24px 0 48px; }
+  </style>
+</head>
+<body>
+  <header class="wrap">
+    <div class="header-row">
+      <div>
+        <h1>CS180 Project 1: Colorizing the Prokudin‑Gorskii Collection</h1>
+        <div class="meta">Maanit Sharma · UC Berkeley · Fall 2025</div>
+      </div>
+      <a class="badge" href="../index.html">← Back to Main</a>
+    </div>
+  </header>
+
+  <div class="wrap grid">
+    <aside aria-label="Table of contents">
+      <h2>Contents</h2>
+      <nav id="toc">
+        <a href="#overview">Overview</a>
+        <a href="#single">Single‑Scale Alignment</a>
+        <a href="#pyramid">Multi‑Level (Image Pyramid)</a>
+        <a href="#results-provided">Results — Provided Images</a>
+        <a href="#results-own">Results — Own Picks</a>
+        <a href="#failures">Misalignments & Analysis</a>
+      </nav>
+      <div class="small" style="margin-top:10px;">Tip: use JPG/PNG only. Don’t upload the large .tif files.</div>
+    </aside>
+
+    <main>
+      <!-- OVERVIEW -->
+      <section id="overview">
+        <h2>Overview</h2>
+        <p>
+          This project re‑creates color photographs from glass plate negatives in the Prokudin‑Gorskii collection.
+          Each source image consists of three monochrome channels (B, G, R) stacked vertically. The task is to align
+          the channels and combine them into an RGB image.
+        </p>
+        <p>
+          I implemented two alignment methods:
+        </p>
+        <ol>
+          <li><strong>Single‑Scale exhaustive search</strong> over integer shifts within a small window using a similarity metric.</li>
+          <li><strong>Multi‑Level pyramid search</strong> that aligns from coarse to fine scales for speed and robustness.</li>
+        </ol>
+        <div class="callout">
+          <strong>Metrics.</strong> I experimented with L1, L2, and NCC (normalized cross‑correlation). Cropping ~5–10% off
+          borders before scoring improved stability by avoiding misguiding edges.
+        </div>
+        <p class="small">If any images proved difficult, I describe what went wrong and how I tried to fix it in
+          <a href="#failures">Misalignments & Analysis</a>.</p>
+      </section>
+
+      <!-- SINGLE SCALE -->
+      <section id="single">
+        <h2>Single‑Scale Alignment — Approach</h2>
+        <p>
+          For a reference channel <code>B</code>, I search integer displacements for <code>R</code> and <code>G</code> within
+          <code>dx, dy ∈ [−w, w]</code>. Before scoring, I crop a border from both the reference and shifted images.
+          The best displacement minimizes an error metric (L1/L2) or maximizes NCC.
+        </p>
+        <pre><code>// Pseudocode
+for channel in {R, G} relative to B:
+  best = +∞ (or −∞ for NCC)
+  for dx in [−w, w]:
+    for dy in [−w, w]:
+      shifted = roll(channel, (dx, dy))
+      score = metric(crop(B), crop(shifted))
+      keep best (min for L1/L2, max for NCC)
+apply best shifts and stack [R_aligned, G_aligned, B]</code></pre>
+        <p class="small"><span class="todo">TODO:</span> Fill in your exact <code>w</code> (search window), crop %, and metric choice.</p>
+      </section>
+
+      <!-- PYRAMID -->
+      <section id="pyramid">
+        <h2>Multi‑Level Alignment (Image Pyramid) — Approach</h2>
+        <p>
+          To speed up alignment and avoid local minima, I build a Gaussian pyramid (downsample by 2 until a minimum size),
+          align at the coarsest level within a small window, then <em>propagate</em> the shift upward level‑by‑level,
+          refining in a small neighborhood around the upscaled shift.
+        </p>
+        <pre><code>// Pseudocode
+function pyramid_align(C, B, window, levels):
+  if levels == 0 or min_dim &le; 64: return single_scale(C, B, window)
+  C2, B2 = downsample(C), downsample(B)
+  (dx2, dy2) = pyramid_align(C2, B2, window, levels − 1)
+  // upscale the shift and refine
+  (dx0, dy0) = (2*dx2, 2*dy2)
+  return refine_around(C, B, (dx0, dy0), window)</code></pre>
+        <p class="small"><span class="todo">TODO:</span> Fill in your pyramid depth, downsample method, and refine window.</p>
+      </section>
+
+      <!-- RESULTS: PROVIDED IMAGES -->
+      <section id="results-provided">
+        <h2>Results — Provided Example Images</h2>
+        <p>
+          Offsets are reported as <strong>(dx, dy)</strong> for the <strong>R</strong> and <strong>G</strong> channels
+          relative to <strong>B</strong> (positive <code>dx</code> = shift right, positive <code>dy</code> = shift down).
+        </p>
+        <h3>Offsets Table</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Method</th>
+              <th>Metric</th>
+              <th>Pyramid Lvls</th>
+              <th>Crop %</th>
+              <th>R offset (dx, dy)</th>
+              <th>G offset (dx, dy)</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>cathedral</td>
+              <td>Single</td>
+              <td>L1</td>
+              <td>—</td>
+              <td>6%</td>
+              <td>(__, __)</td>
+              <td>(__, __)</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>cathedral</td>
+              <td>Pyramid</td>
+              <td>L1</td>
+              <td>__</td>
+              <td>6%</td>
+              <td>(__, __)</td>
+              <td>(__, __)</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>emir</td>
+              <td>Pyramid</td>
+              <td>NCC</td>
+              <td>__</td>
+              <td>8%</td>
+              <td>(__, __)</td>
+              <td>(__, __)</td>
+              <td>e.g., used edges</td>
+            </tr>
+            <!-- Add rows for monastery, harvesters, train, three_generations, etc. -->
+          </tbody>
+        </table>
+
+        <h3>Gallery (Compressed Images)</h3>
+        <p class="small">Place your JPG/PNG results in <code>media/</code> and update the paths below.</p>
+        <div class="figure-grid">
+          <figure>
+            <img src="media/cathedral_pyramid.jpg" alt="cathedral — pyramid result" />
+            <figcaption>cathedral — Pyramid • R: (__, __) • G: (__, __)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/monastery_pyramid.jpg" alt="monastery — pyramid result" />
+            <figcaption>monastery — Pyramid • R: (__, __) • G: (__, __)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/emir_pyramid.jpg" alt="emir — pyramid result" />
+            <figcaption>emir — Pyramid • R: (__, __) • G: (__, __)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/train_pyramid.jpg" alt="train — pyramid result" />
+            <figcaption>train — Pyramid • R: (__, __) • G: (__, __)</figcaption>
+          </figure>
+          <!-- Add more figures as needed -->
+        </div>
+      </section>
+
+      <!-- RESULTS: OWN PICKS -->
+      <section id="results-own">
+        <h2>Results — Own Picks from Prokudin‑Gorskii</h2>
+        <p>Select a few additional plates from the collection and report your best method + offsets.</p>
+        <table>
+          <thead>
+            <tr>
+              <th>Image</th>
+              <th>Method</th>
+              <th>Metric</th>
+              <th>Pyramid Lvls</th>
+              <th>R offset (dx, dy)</th>
+              <th>G offset (dx, dy)</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>my_choice_1</td>
+              <td>Pyramid</td>
+              <td>L1</td>
+              <td>__</td>
+              <td>(__, __)</td>
+              <td>(__, __)</td>
+              <td></td>
+            </tr>
+            <tr>
+              <td>my_choice_2</td>
+              <td>Pyramid</td>
+              <td>NCC</td>
+              <td>__</td>
+              <td>(__, __)</td>
+              <td>(__, __)</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="figure-grid" style="margin-top: 12px;">
+          <figure>
+            <img src="media/my_choice_1.jpg" alt="own pick 1 — result" />
+            <figcaption>my_choice_1 — R: (__, __) • G: (__, __)</figcaption>
+          </figure>
+          <figure>
+            <img src="media/my_choice_2.jpg" alt="own pick 2 — result" />
+            <figcaption>my_choice_2 — R: (__, __) • G: (__, __)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- FAILURES / ANALYSIS -->
+      <section id="failures">
+        <h2>Misalignments & Analysis</h2>
+        <p>
+          If any images failed to align cleanly, briefly explain hypotheses and attempted fixes.
+        </p>
+        <ul>
+          <li><strong>High‑contrast borders</strong> (black/white frames) biased the metric → fixed by cropping 6–10%.</li>
+          <li><strong>Brightness/contrast differences</strong> across channels → tried gradient/edge maps before scoring.</li>
+          <li><strong>Fine repetitive texture</strong> (e.g., bricks) → used pyramid + smaller refine window at finer levels.</li>
+          <li><strong>Motion between plates</strong> (subject moved) → residual ghosting noted in captions.</li>
+          <li><strong>Non‑rigid distortions</strong> (lens/scan) → outside scope of rigid shift; minor blur left.</li>
+        </ul>
+        <p class="small"><span class="todo">TODO:</span> Drop in thumbnails of any problematic outputs and 1–2 lines describing what you tried.</p>
+
+        <h3>Runtime Notes</h3>
+        <ul>
+          <li>Single‑scale exhaustive search over ±w took ~__ s per image at full resolution.</li>
+          <li>Pyramid (levels: __) cut runtime to ~__ s with similar/better accuracy.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Repro & File Notes</h2>
+        <ul>
+          <li>All images on this page are compressed (<code>.jpg</code>/<code>.png</code>); <em>no</em> large <code>.tif</code> files are included.</li>
+          <li>Offsets reported as <code>(dx, dy)</code> with <code>dx</code>=right, <code>dy</code>=down relative to <strong>B</strong>.</li>
+          <li>Output naming I used: <code>name_method_metric.jpg</code> (e.g., <code>emir_pyramid_l1.jpg</code>).</li>
+        </ul>
+      </section>
+    </main>
+  </div>
+
+  <footer>
+    © <span id="year"></span> Maanit Sharma · CS180 Project 1
+  </footer>
+
+  <script>
+    // highlight active TOC link
+    const links = Array.from(document.querySelectorAll('#toc a'));
+    const sections = links.map(a => document.querySelector(a.getAttribute('href')));
+    const io = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        const i = sections.indexOf(entry.target);
+        if (i >= 0) {
+          const link = links[i];
+          if (entry.isIntersecting) link.classList.add('active');
+          else link.classList.remove('active');
+        }
+      });
+    }, { rootMargin: '-40% 0px -50% 0px', threshold: 0.01 });
+    sections.forEach(sec => sec && io.observe(sec));
+
+    // year stamp
+    document.getElementById('year').textContent = new Date().getFullYear();
+  </script>
+</body>
+</html>
