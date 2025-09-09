@@ -84,11 +84,9 @@
         <a href="#overview">Overview</a>
         <a href="#single">Single‑Scale Alignment</a>
         <a href="#pyramid">Multi‑Level (Image Pyramid)</a>
-        <a href="#results-provided">Results — Provided Images</a>
-        <a href="#results-own">Results — Own Picks</a>
-        <a href="#failures">Misalignments & Analysis</a>
+        <a href="#results-provided">Results (Example Images)</a>
+        <a href="#results-own">Results (Personal Choices) </a>
       </nav>
-      <div class="small" style="margin-top:10px;">Tip: use JPG/PNG only. Don’t upload the large .tif files.</div>
     </aside>
 
     <main>
@@ -96,8 +94,8 @@
       <section id="overview">
         <h2>Overview</h2>
         <p>
-          This project re‑creates color photographs from glass plate negatives in the Prokudin‑Gorskii collection.
-          Each source image consists of three monochrome channels (B, G, R) stacked vertically. The task is to align
+          This project re‑creates color images from glass plate negatives in the Prokudin‑Gorskii collection.
+          Each source image consists of three channels taken at different exposures with blue, green, and red filters (B, G, R) stacked vertically. The task is to align
           the channels and combine them into an RGB image.
         </p>
         <p>
@@ -108,7 +106,7 @@
           <li><strong>Multi‑Level pyramid search</strong> that aligns from coarse to fine scales for speed and robustness.</li>
         </ol>
         <div class="callout">
-          <strong>Metrics.</strong> I experimented with L1, L2, and NCC (normalized cross‑correlation). Cropping ~5–10% off
+          <strong>Metrics.</strong> I experimented with L1, L2, and NCC (normalized cross‑correlation). Cropping 6% off
           borders before scoring improved stability by avoiding misguiding edges.
         </div>
         <p class="small">If any images proved difficult, I describe what went wrong and how I tried to fix it in
@@ -117,13 +115,13 @@
 
       <!-- SINGLE SCALE -->
       <section id="single">
-        <h2>Single‑Scale Alignment — Approach</h2>
+        <h2>Single‑Scale Alignment Approach</h2>
         <p>
           I treat the <strong>blue (B)</strong> channel as the fixed reference. For each of the <strong>red (R)</strong>
           and <strong>green (G)</strong> channels, I exhaustively search integer shifts from <strong>−15 to +15 pixels</strong>
           in both <em>x</em> and <em>y</em>. Each candidate shift is scored against the reference on the
-          <em>cropped interior</em>—I remove about <strong>6% of the max image dimension</strong> from all sides to avoid
-          misleading border artifacts from the plate splits.
+          <em>cropped interior</em>—I remove about <strong>6% of the max image dimension</strong> from all sides of all 3 of the 
+          blue, green, and red channel images to esnure only the interior, non-border pixels are taken into account when computing errors for allignment.
         </p>
         <ul>
           <li><strong>Metrics tested:</strong> L2 (squared‑error), L1 (sum of absolute differences), and NCC (normalized cross‑correlation).</li>
@@ -137,7 +135,7 @@
 
       <!-- PYRAMID -->
       <section id="pyramid">
-        <h2>Multi‑Level Alignment (Image Pyramid) — Approach</h2>
+        <h2>Multi‑Level Alignment (Image Pyramid) Approach</h2>
         <p>
           To make alignment on large <code>.tif</code> plates both <em>faster</em> and <em>more robust</em>, I use a
           <strong>4‑level Gaussian pyramid</strong> for each channel (repeatedly downsampling by 2× until either
@@ -151,8 +149,8 @@
           <li><strong>Repeat</strong> the propagate‑and‑refine step until full resolution; then apply the final shifts to the
             <em>uncropped</em> R and G and stack into RGB.</li>
         </ol>
-        <p class="small">At every level, scoring uses the same cropped‑interior trick (~6%) to avoid border bias. This pyramid cut
-          runtime substantially on high‑res images while improving reliability on challenging scenes.</p>
+        <p class="small">Just like in the single scale approach, I use the same cropped‑interior trick on all 3 of the channel images (~6%) to avoid border bias before actually
+          computing scores in the alignment process. This image pyramid approach sped up runtime substantially on high‑res images while improving reliability on challenging scenes.</p>
       </section>
 
       <!-- RESULTS: PROVIDED IMAGES -->
@@ -161,38 +159,7 @@
 
         <h3>Resulting Images</h3>
         <div class="figure-grid">
-          <figure>
-            <img src="./media/cathedral.jpg" alt="cathedral result" />
-            <figcaption>cathedral • R: (3, 9) • G: (2, 4)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/monastery.jpg" alt="monastery result" />
-            <figcaption>monastery • R: (2, 3) • G: (2, -3)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/tobolsk.jpg" alt="tobolsk result" />
-            <figcaption>tobolsk • R: (3, 6) • G: (3, 3)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/emir.jpg" alt="emir result" />
-            <figcaption>emir • R: (42, 104) • G: (24, 49)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/italil.jpg" alt="italil result" />
-            <figcaption>italil • R: (35, 76) • G: (21, 38)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/church.jpg" alt="church result" />
-            <figcaption>church • R: (-4, 58) • G: (4, 25)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/three_generations.jpg" alt="three_generations result" />
-            <figcaption>three_generations • R: (10, 112) • G: (13, 54)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/chapel.jpg" alt="chapel result" />
-            <figcaption>chapel • R: (0, 115) • G: (1, 34)</figcaption>
-          </figure>
+          
           <figure>
             <img src="./media/lugano.jpg" alt="lugano result" />
             <figcaption>lugano • R: (-29, 92) • G: (-16, 41)</figcaption>
@@ -227,62 +194,7 @@
         <div class="table-wrap">
           <table>
             <thead>
-              <tr>
-                <th>Image</th>
-                <th>Method</th>
-                <th>R offset (dx, dy)</th>
-                <th>G offset (dx, dy)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>cathedral.jpg</td>
-                <td>Single</td>
-                <td>(3, 9)</td>
-                <td>(2, 4)</td>
-              </tr>
-              <tr>
-                <td>monastery.jpg</td>
-                <td>Single</td>
-                <td>(2, 3)</td>
-                <td>(2, -3)</td>
-              </tr>
-              <tr>
-                <td>tobolsk.jpg</td>
-                <td>Single</td>
-                <td>(3, 6)</td>
-                <td>(3, 3)</td>
-              </tr>
-              <tr>
-                <td>emir.tif</td>
-                <td>Pyramid</td>
-                <td>(42, 104)</td>
-                <td>(24, 49)</td>
-              </tr>
-              <tr>
-                <td>italil.tif</td>
-                <td>Pyramid</td>
-                <td>(35, 76)</td>
-                <td>(21, 38)</td>
-              </tr>
-              <tr>
-                <td>church.tif</td>
-                <td>Pyramid</td>
-                <td>(-4, 58)</td>
-                <td>(4, 25)</td>
-              </tr>
-              <tr>
-                <td>three_generations.tif</td>
-                <td>Pyramid</td>
-                <td>(10, 112)</td>
-                <td>(13, 54)</td>
-              </tr>
-              <tr>
-                <td>chapel.tif</td>
-                <td>Pyramid</td>
-                <td>(0, 115)</td>
-                <td>(1, 34)</td>
-              </tr>
+              
               <tr>
                 <td>lugano.tif</td>
                 <td>Pyramid</td>
@@ -417,37 +329,6 @@
             </tbody>
           </table>
         </div>
-      </section>
-
-      <!-- FAILURES / ANALYSIS -->
-      <section id="failures">
-        <h2>Misalignments & Analysis</h2>
-        <p>
-          If any images failed to align cleanly, briefly explain hypotheses and attempted fixes.
-        </p>
-        <ul>
-          <li><strong>High‑contrast borders</strong> (black/white frames) biased the metric → fixed by cropping 6–10%.</li>
-          <li><strong>Brightness/contrast differences</strong> across channels → tried gradient/edge maps before scoring.</li>
-          <li><strong>Fine repetitive texture</strong> (e.g., bricks) → used pyramid + smaller refine window at finer levels.</li>
-          <li><strong>Motion between plates</strong> (subject moved) → residual ghosting noted in captions.</li>
-          <li><strong>Non‑rigid distortions</strong> (lens/scan) → outside scope of rigid shift; minor blur left.</li>
-        </ul>
-        <p class="small"><span class="todo">TODO:</span> Drop in thumbnails of any problematic outputs and 1–2 lines describing what you tried.</p>
-
-        <h3>Runtime Notes</h3>
-        <ul>
-          <li>Single‑scale exhaustive search over ±w took ~__ s per image at full resolution.</li>
-          <li>Pyramid (levels: __) cut runtime to ~__ s with similar/better accuracy.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Repro & File Notes</h2>
-        <ul>
-          <li>All images on this page are compressed (<code>.jpg</code>/<code>.png</code>); <em>no</em> large <code>.tif</code> files are included.</li>
-          <li>Offsets reported as <code>(dx, dy)</code> with <code>dx</code>=right, <code>dy</code>=down relative to <strong>B</strong>.</li>
-          <li>Output naming I used: <code>name_method_metric.jpg</code> (e.g., <code>emir_pyramid_l1.jpg</code>).</li>
-        </ul>
       </section>
     </main>
   </div>
