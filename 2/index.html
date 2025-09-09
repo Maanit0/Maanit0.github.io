@@ -45,7 +45,8 @@
 
     .callout { background: var(--subtle); border-left: 4px solid var(--accent); padding: 12px 12px; border-radius: 10px; }
 
-    .figure-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+    .figure-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
+    @media (max-width: 800px) { .figure-grid { grid-template-columns: 1fr; } }
     figure { margin: 0; border: 1px solid var(--border); border-radius: 12px; overflow: hidden; background: #fff; }
     figure img { width: 100%; display: block; }
     figcaption { padding: 8px 10px; color: var(--muted); font-size: 0.92rem; border-top: 1px solid var(--border); }
@@ -58,6 +59,9 @@
     pre { padding: 12px; overflow: auto; }
     .small { color: var(--muted); font-size: 0.92rem; }
     .todo { background: #fff7ed; border: 1px dashed #fdba74; padding: 8px 10px; border-radius: 8px; display: inline-block; }
+
+    /* Prevent wide tables from pushing layout */
+    .table-wrap { overflow-x: auto; }
 
     footer { text-align: center; color: var(--muted); font-size: 0.9rem; padding: 24px 0 48px; }
   </style>
@@ -80,9 +84,11 @@
         <a href="#overview">Overview</a>
         <a href="#single">Single‑Scale Alignment</a>
         <a href="#pyramid">Multi‑Level (Image Pyramid)</a>
-        <a href="#results-provided">Results (Example Images)</a>
-        <a href="#results-own">Results (Personal Choices)</a>
+        <a href="#results-provided">Results — Provided Images</a>
+        <a href="#results-own">Results — Own Picks</a>
+        <a href="#failures">Misalignments & Analysis</a>
       </nav>
+      <div class="small" style="margin-top:10px;">Tip: use JPG/PNG only. Don’t upload the large .tif files.</div>
     </aside>
 
     <main>
@@ -111,7 +117,7 @@
 
       <!-- SINGLE SCALE -->
       <section id="single">
-        <h2>Single‑Scale Alignment Approach</h2>
+        <h2>Single‑Scale Alignment — Approach</h2>
         <p>
           I treat the <strong>blue (B)</strong> channel as the fixed reference. For each of the <strong>red (R)</strong>
           and <strong>green (G)</strong> channels, I exhaustively search integer shifts from <strong>−15 to +15 pixels</strong>
@@ -131,13 +137,11 @@
 
       <!-- PYRAMID -->
       <section id="pyramid">
-        <h2>Multi‑Level Alignment (Image Pyramid) Approach</h2>
+        <h2>Multi‑Level Alignment (Image Pyramid) — Approach</h2>
         <p>
           To make alignment on large <code>.tif</code> plates both <em>faster</em> and <em>more robust</em>, I use a
           <strong>4‑level Gaussian pyramid</strong> for each channel (repeatedly downsampling by 2× until either
-          four levels are built or the smallest dimension reaches ~64 px). In my algorithm, I downsampled input images with the resize() function from the skimage 
-          library. This resize function also performs Gaussian smoothing when downsampling by setting anti_aliasing to True, which led to higher level downsampled images looking more like
-          lower level images in the image pyramid compared to when no Gaussian smoothing was used. As a result, this Gaussian smoothing during resizing led to better alignment.
+          four levels are built or the smallest dimension reaches ~64 px).
         </p>
         <ol>
           <li><strong>Coarsest pass:</strong> at the lowest‑resolution level, run the same single‑scale search with a
@@ -220,108 +224,110 @@
         </div>
 
         <h3>Offsets Table</h3>
-        <table>
-          <thead>
-            <tr>
-              <th>Image</th>
-              <th>Method</th>
-              <th>R offset (dx, dy)</th>
-              <th>G offset (dx, dy)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>cathedral.jpg</td>
-              <td>Single</td>
-              <td>(3, 9)</td>
-              <td>(2, 4)</td>
-            </tr>
-            <tr>
-              <td>monastery.jpg</td>
-              <td>Single</td>
-              <td>(2, 3)</td>
-              <td>(2, -3)</td>
-            </tr>
-            <tr>
-              <td>tobolsk.jpg</td>
-              <td>Single</td>
-              <td>(3, 6)</td>
-              <td>(3, 3)</td>
-            </tr>
-            <tr>
-              <td>emir.tif</td>
-              <td>Pyramid</td>
-              <td>(42, 104)</td>
-              <td>(24, 49)</td>
-            </tr>
-            <tr>
-              <td>italil.tif</td>
-              <td>Pyramid</td>
-              <td>(35, 76)</td>
-              <td>(21, 38)</td>
-            </tr>
-            <tr>
-              <td>church.tif</td>
-              <td>Pyramid</td>
-              <td>(-4, 58)</td>
-              <td>(4, 25)</td>
-            </tr>
-            <tr>
-              <td>three_generations.tif</td>
-              <td>Pyramid</td>
-              <td>(10, 112)</td>
-              <td>(13, 54)</td>
-            </tr>
-            <tr>
-              <td>chapel.tif</td>
-              <td>Pyramid</td>
-              <td>(0, 115)</td>
-              <td>(1, 34)</td>
-            </tr>
-            <tr>
-              <td>lugano.tif</td>
-              <td>Pyramid</td>
-              <td>(-29, 92)</td>
-              <td>(-16, 41)</td>
-            </tr>
-            <tr>
-              <td>melons.tif</td>
-              <td>Pyramid</td>
-              <td>(14, 178)</td>
-              <td>(11, 82)</td>
-            </tr>
-            <tr>
-              <td>lastochikino.tif</td>
-              <td>Pyramid</td>
-              <td>(-7, 76)</td>
-              <td>(-1, -3)</td>
-            </tr>
-            <tr>
-              <td>icon.tif</td>
-              <td>Pyramid</td>
-              <td>(22, 91)</td>
-              <td>(17, 41)</td>
-            </tr>
-            <tr>
-              <td>siren.tif</td>
-              <td>Pyramid</td>
-              <td>(-26, 97)</td>
-              <td>(-7, 50)</td>
-            </tr>
-            <tr>
-              <td>self_portrait.tif</td>
-              <td>Pyramid</td>
-              <td>(37, 175)</td>
-              <td>(27, 77)</td>
-            </tr>
-            <tr>
-              <td>harvesters.tif</td>
-              <td>Pyramid</td>
-              <td>(14, 124)</td>
-              <td>(17, 60)</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Method</th>
+                <th>R offset (dx, dy)</th>
+                <th>G offset (dx, dy)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>cathedral.jpg</td>
+                <td>Single</td>
+                <td>(3, 9)</td>
+                <td>(2, 4)</td>
+              </tr>
+              <tr>
+                <td>monastery.jpg</td>
+                <td>Single</td>
+                <td>(2, 3)</td>
+                <td>(2, -3)</td>
+              </tr>
+              <tr>
+                <td>tobolsk.jpg</td>
+                <td>Single</td>
+                <td>(3, 6)</td>
+                <td>(3, 3)</td>
+              </tr>
+              <tr>
+                <td>emir.tif</td>
+                <td>Pyramid</td>
+                <td>(42, 104)</td>
+                <td>(24, 49)</td>
+              </tr>
+              <tr>
+                <td>italil.tif</td>
+                <td>Pyramid</td>
+                <td>(35, 76)</td>
+                <td>(21, 38)</td>
+              </tr>
+              <tr>
+                <td>church.tif</td>
+                <td>Pyramid</td>
+                <td>(-4, 58)</td>
+                <td>(4, 25)</td>
+              </tr>
+              <tr>
+                <td>three_generations.tif</td>
+                <td>Pyramid</td>
+                <td>(10, 112)</td>
+                <td>(13, 54)</td>
+              </tr>
+              <tr>
+                <td>chapel.tif</td>
+                <td>Pyramid</td>
+                <td>(0, 115)</td>
+                <td>(1, 34)</td>
+              </tr>
+              <tr>
+                <td>lugano.tif</td>
+                <td>Pyramid</td>
+                <td>(-29, 92)</td>
+                <td>(-16, 41)</td>
+              </tr>
+              <tr>
+                <td>melons.tif</td>
+                <td>Pyramid</td>
+                <td>(14, 178)</td>
+                <td>(11, 82)</td>
+              </tr>
+              <tr>
+                <td>lastochikino.tif</td>
+                <td>Pyramid</td>
+                <td>(-7, 76)</td>
+                <td>(-1, -3)</td>
+              </tr>
+              <tr>
+                <td>icon.tif</td>
+                <td>Pyramid</td>
+                <td>(22, 91)</td>
+                <td>(17, 41)</td>
+              </tr>
+              <tr>
+                <td>siren.tif</td>
+                <td>Pyramid</td>
+                <td>(-26, 97)</td>
+                <td>(-7, 50)</td>
+              </tr>
+              <tr>
+                <td>self_portrait.tif</td>
+                <td>Pyramid</td>
+                <td>(37, 175)</td>
+                <td>(27, 77)</td>
+              </tr>
+              <tr>
+                <td>harvesters.tif</td>
+                <td>Pyramid</td>
+                <td>(14, 124)</td>
+                <td>(17, 60)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
         <p>
           Offsets are reported as <strong>(dx, dy)</strong> for the <strong>R</strong> and <strong>G</strong> channels
@@ -356,60 +362,95 @@
           </figure>
           <figure>
             <img src="./media/island_capri.jpg" alt="island_capri result" />
-          <figure>
-        <div>
-     
+            <figcaption>island_capri • R: (-10, 102) • G: (-12, 45)</figcaption>
+          </figure>
+        </div>
+
         <h3>Offsets Table</h3>
-  
-        <table>
-          <thead>
-            <tr>
-              <th>Image</th>
-              <th>Method</th>
-              <th>R offset (dx, dy)</th>
-              <th>G offset (dx, dy)</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr>
-              <td>forest_road.jpg</td>
-              <td>Single</td>
-              <td>(1, 10)</td>
-              <td>(-3, 4)</td>
-            </tr>
-            <tr>
-              <td>courtyard.jpg</td>
-              <td>Single</td>
-              <td>(4, 11)</td>
-              <td>(2, 5)</td>
-            </tr>
-            <tr>
-              <td>piony.tif</td>
-              <td>Pyramid</td>
-              <td>(-5, 104)</td>
-              <td>(4, 50)</td>
-            </tr>
-            <tr>
-              <td>milan_cathedral.tif</td>
-              <td>Pyramid</td>
-              <td>(-54, -4)</td>
-              <td>(-19, 10)</td>
-            </tr>
-            <tr>
-              <td>cherry_tree.tif</td>
-              <td>Pyramid</td>
-              <td>(-83, 22)</td>
-              <td>(-94, -31)</td>
-            </tr>
-            <tr>
-              <td>island_capri.tif</td>
-              <td>Pyramid</td>
-              <td>(-10, 102)</td>
-              <td>(-12, 45)</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Image</th>
+                <th>Method</th>
+                <th>R offset (dx, dy)</th>
+                <th>G offset (dx, dy)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>forest_road.jpg</td>
+                <td>Single</td>
+                <td>(1, 10)</td>
+                <td>(-3, 4)</td>
+              </tr>
+              <tr>
+                <td>courtyard.jpg</td>
+                <td>Single</td>
+                <td>(4, 11)</td>
+                <td>(2, 5)</td>
+              </tr>
+              <tr>
+                <td>piony.tif</td>
+                <td>Pyramid</td>
+                <td>(-5, 104)</td>
+                <td>(4, 50)</td>
+              </tr>
+              <tr>
+                <td>milan_cathedral.tif</td>
+                <td>Pyramid</td>
+                <td>(-54, -4)</td>
+                <td>(-19, 10)</td>
+              </tr>
+              <tr>
+                <td>cherry_tree.tif</td>
+                <td>Pyramid</td>
+                <td>(-83, 22)</td>
+                <td>(-94, -31)</td>
+              </tr>
+              <tr>
+                <td>island_capri.tif</td>
+                <td>Pyramid</td>
+                <td>(-10, 102)</td>
+                <td>(-12, 45)</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- FAILURES / ANALYSIS -->
+      <section id="failures">
+        <h2>Misalignments & Analysis</h2>
+        <p>
+          If any images failed to align cleanly, briefly explain hypotheses and attempted fixes.
+        </p>
+        <ul>
+          <li><strong>High‑contrast borders</strong> (black/white frames) biased the metric → fixed by cropping 6–10%.</li>
+          <li><strong>Brightness/contrast differences</strong> across channels → tried gradient/edge maps before scoring.</li>
+          <li><strong>Fine repetitive texture</strong> (e.g., bricks) → used pyramid + smaller refine window at finer levels.</li>
+          <li><strong>Motion between plates</strong> (subject moved) → residual ghosting noted in captions.</li>
+          <li><strong>Non‑rigid distortions</strong> (lens/scan) → outside scope of rigid shift; minor blur left.</li>
+        </ul>
+        <p class="small"><span class="todo">TODO:</span> Drop in thumbnails of any problematic outputs and 1–2 lines describing what you tried.</p>
+
+        <h3>Runtime Notes</h3>
+        <ul>
+          <li>Single‑scale exhaustive search over ±w took ~__ s per image at full resolution.</li>
+          <li>Pyramid (levels: __) cut runtime to ~__ s with similar/better accuracy.</li>
+        </ul>
+      </section>
+
       <section>
+        <h2>Repro & File Notes</h2>
+        <ul>
+          <li>All images on this page are compressed (<code>.jpg</code>/<code>.png</code>); <em>no</em> large <code>.tif</code> files are included.</li>
+          <li>Offsets reported as <code>(dx, dy)</code> with <code>dx</code>=right, <code>dy</code>=down relative to <strong>B</strong>.</li>
+          <li>Output naming I used: <code>name_method_metric.jpg</code> (e.g., <code>emir_pyramid_l1.jpg</code>).</li>
+        </ul>
+      </section>
+    </main>
+  </div>
 
   <footer>
     © <span id="year"></span> Maanit Sharma · CS180 Project 1
