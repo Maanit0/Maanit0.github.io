@@ -82,7 +82,6 @@
         <a href="#pyramid">Multi‑Level (Image Pyramid)</a>
         <a href="#results-provided">Results — Provided Images</a>
         <a href="#results-own">Results — Own Picks</a>
-        <a href="#failures">Misalignments & Analysis</a>
       </nav>
     </aside>
 
@@ -403,39 +402,6 @@
           </figure>
           <figure>
             <img src="./media/island_capri.jpg" alt="island_capri result" />
-
-      <!-- FAILURES / ANALYSIS -->
-      <section id="failures">
-        <h2>Misalignments & Analysis</h2>
-        <p>
-          If any images failed to align cleanly, briefly explain hypotheses and attempted fixes.
-        </p>
-        <ul>
-          <li><strong>High‑contrast borders</strong> (black/white frames) biased the metric → fixed by cropping 6–10%.</li>
-          <li><strong>Brightness/contrast differences</strong> across channels → tried gradient/edge maps before scoring.</li>
-          <li><strong>Fine repetitive texture</strong> (e.g., bricks) → used pyramid + smaller refine window at finer levels.</li>
-          <li><strong>Motion between plates</strong> (subject moved) → residual ghosting noted in captions.</li>
-          <li><strong>Non‑rigid distortions</strong> (lens/scan) → outside scope of rigid shift; minor blur left.</li>
-        </ul>
-        <p class="small"><span class="todo">TODO:</span> Drop in thumbnails of any problematic outputs and 1–2 lines describing what you tried.</p>
-
-        <h3>Runtime Notes</h3>
-        <ul>
-          <li>Single‑scale exhaustive search over ±w took ~__ s per image at full resolution.</li>
-          <li>Pyramid (levels: __) cut runtime to ~__ s with similar/better accuracy.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Repro & File Notes</h2>
-        <ul>
-          <li>All images on this page are compressed (<code>.jpg</code>/<code>.png</code>); <em>no</em> large <code>.tif</code> files are included.</li>
-          <li>Offsets reported as <code>(dx, dy)</code> with <code>dx</code>=right, <code>dy</code>=down relative to <strong>B</strong>.</li>
-          <li>Output naming I used: <code>name_method_metric.jpg</code> (e.g., <code>emir_pyramid_l1.jpg</code>).</li>
-        </ul>
-      </section>
-    </main>
-  </div>
 
   <footer>
     © <span id="year"></span> Maanit Sharma · CS180 Project 1
