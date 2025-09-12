@@ -83,15 +83,7 @@
       <nav id="toc">
         <a href="#overview">Overview</a>
         <a href="#single">Single‑Scale Alignment</a>
-        <a href="#single-results-ex-l2">Single L2 — Example Results</a>
-        <a href="#single-offsets-ex-l2">Single L2 — Example Offsets</a>
-        <a href="#single-results-custom-l2">Single L2 — Custom Results</a>
-        <a href="#single-offsets-custom-l2">Single L2 — Custom Offsets</a>
-        <a href="#pyramid">Multi‑Level (Image Pyramid)</a>
-        <a href="#pyramid-results-ex-l2">Pyramid L2 — Example Results</a>
-        <a href="#pyramid-offsets-ex-l2">Pyramid L2 — Example Offsets</a>
-        <a href="#pyramid-results-custom-l2">Pyramid L2 — Custom Results</a>
-        <a href="#pyramid-offsets-custom-l2">Pyramid L2 — Custom Offsets</a>
+        <a href="#pyramid">Multi‑Level Alignment (Image Pyramid)</a>
         <a href="#misalignment">Misalignment: emir (L2 → L1)</a>
       </nav>
       <div class="small" style="margin-top:10px;">Tip: use JPG/PNG only. Don’t upload the large .tif files.</div>
@@ -206,8 +198,25 @@
                 <td>tobolsk.jpg</td>
                 <td>(3, 6)</td>
                 <td>(3, 3)</td>
-              </tr>
-            </tbody>
+  <section id="pyramid">
+        <h2>Multi‑Level Alignment (Image Pyramid) — Approach</h2>
+        <p>
+          To make alignment on large <code>.tif</code> plates both <em>faster</em> and <em>more robust</em>, I use a
+          <strong>4‑level Gaussian pyramid</strong> for each channel (repeatedly downsampling by 2× until either four
+          levels are built or the smallest dimension reaches ~64 px).
+        </p>
+        <ol>
+          <li><strong>Coarsest pass:</strong> at the lowest‑resolution level, run the same single‑scale search with a
+            <strong>±15 px</strong> window to get an initial shift.</li>
+          <li><strong>Propagate upward:</strong> move to the next finer level, <strong>double</strong> the shift to account for the 2× change in scale,</li>
+          <li><strong>Local refinement:</strong> refine the estimate in a small neighborhood of <strong>±2 px</strong> around the doubled shift.</li>
+          <li><strong>Repeat:</strong> repeat the propagate‑and‑refine step until full resolution; then apply the final shifts to the
+            <em>uncropped</em> R and G and stack into RGB.</li>
+        </ol>
+        <p class="small">At every level, scoring uses the same cropped‑interior trick (~6%) to avoid border bias. This pyramid cut runtime substantially on high‑res images while improving reliability on challenging scenes.</p>
+      </section>
+
+      <section id="pyramid-resultsy>
           </table>
         </div>
       </section>
