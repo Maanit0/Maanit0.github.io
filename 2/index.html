@@ -83,10 +83,18 @@
       <nav id="toc">
         <a href="#overview">Overview</a>
         <a href="#single">Single‑Scale Alignment</a>
+        <a href="#single-results-ex-l2">Single L2 — Example Results</a>
+        <a href="#single-offsets-ex-l2">Single L2 — Example Offsets</a>
+        <a href="#single-results-custom-l2">Single L2 — Custom Results</a>
+        <a href="#single-offsets-custom-l2">Single L2 — Custom Offsets</a>
         <a href="#pyramid">Multi‑Level (Image Pyramid)</a>
-        <a href="#results-provided">Results (Example Images)</a>
-        <a href="#results-own">Results (Personal Choices) </a>
+        <a href="#pyramid-results-ex-l2">Pyramid L2 — Example Results</a>
+        <a href="#pyramid-offsets-ex-l2">Pyramid L2 — Example Offsets</a>
+        <a href="#pyramid-results-custom-l2">Pyramid L2 — Custom Results</a>
+        <a href="#pyramid-offsets-custom-l2">Pyramid L2 — Custom Offsets</a>
+        <a href="#misalignment">Misalignment: emir (L2 → L1)</a>
       </nav>
+      <div class="small" style="margin-top:10px;">Tip: use JPG/PNG only. Don’t upload the large .tif files.</div>
     </aside>
 
     <main>
@@ -94,8 +102,8 @@
       <section id="overview">
         <h2>Overview</h2>
         <p>
-          This project re‑creates color images from glass plate negatives in the Prokudin‑Gorskii collection.
-          Each source image consists of three channels taken at different exposures with blue, green, and red filters (B, G, R) stacked vertically. The task is to align
+          This project re‑creates color photographs from glass plate negatives in the Prokudin‑Gorskii collection.
+          Each source image consists of three monochrome channels (B, G, R) stacked vertically. The task is to align
           the channels and combine them into an RGB image.
         </p>
         <p>
@@ -106,20 +114,22 @@
           <li><strong>Multi‑Level pyramid search</strong> that aligns from coarse to fine scales for speed and robustness.</li>
         </ol>
         <div class="callout">
-          <strong>Metrics.</strong> I experimented with L1, L2, and NCC (normalized cross‑correlation). Cropping 6% off
+          <strong>Metrics.</strong> I experimented with L1, L2, and NCC (normalized cross‑correlation). Cropping ~5–10% off
           borders before scoring improved stability by avoiding misguiding edges.
         </div>
+        <p class="small">If any images proved difficult, I describe what went wrong and how I tried to fix it in
+          <a href="#failures">Misalignments & Analysis</a>.</p>
       </section>
 
       <!-- SINGLE SCALE -->
       <section id="single">
-        <h2>Single‑Scale Alignment Approach</h2>
+        <h2>Single‑Scale Alignment — Approach</h2>
         <p>
           I treat the <strong>blue (B)</strong> channel as the fixed reference. For each of the <strong>red (R)</strong>
           and <strong>green (G)</strong> channels, I exhaustively search integer shifts from <strong>−15 to +15 pixels</strong>
           in both <em>x</em> and <em>y</em>. Each candidate shift is scored against the reference on the
-          <em>cropped interior</em>—I remove about <strong>6% of the max image dimension</strong> from all sides of all 3 of the 
-          blue, green, and red channel images to esnure only the interior, non-border pixels are taken into account when computing errors for allignment.
+          <em>cropped interior</em>—I remove about <strong>6% of the max image dimension</strong> from all sides to avoid
+          misleading border artifacts from the plate splits.
         </p>
         <ul>
           <li><strong>Metrics tested:</strong> L2 (squared‑error), L1 (sum of absolute differences), and NCC (normalized cross‑correlation).</li>
@@ -133,7 +143,7 @@
 
       <!-- PYRAMID -->
       <section id="pyramid">
-        <h2>Multi‑Level Alignment (Image Pyramid) Approach</h2>
+        <h2>Multi‑Level Alignment (Image Pyramid) — Approach</h2>
         <p>
           To make alignment on large <code>.tif</code> plates both <em>faster</em> and <em>more robust</em>, I use a
           <strong>4‑level Gaussian pyramid</strong> for each channel (repeatedly downsampling by 2× until either
@@ -147,81 +157,36 @@
           <li><strong>Repeat</strong> the propagate‑and‑refine step until full resolution; then apply the final shifts to the
             <em>uncropped</em> R and G and stack into RGB.</li>
         </ol>
-        <p class="small">Just like in the single scale approach, I use the same cropped‑interior trick on all 3 of the channel images (~6%) to avoid border bias before actually
-          computing scores in the alignment process. This image pyramid approach sped up runtime substantially on high‑res images while improving reliability on challenging scenes.</p>
+        <p class="small">At every level, scoring uses the same cropped‑interior trick (~6%) to avoid border bias. This pyramid cut
+          runtime substantially on high‑res images while improving reliability on challenging scenes.</p>
       </section>
 
       <!-- RESULTS: PROVIDED IMAGES -->
-      <section id="results-provided">
-        <h2>Results (Example Images)</h2>
-
-        <h3>Resulting Images</h3>
+      <section id="single-results-ex-l2">
+        <h2>Single‑Scale (L2) — Example Results</h2>
         <div class="figure-grid">
           <figure>
-            <img src="./media/cathedral.jpg" alt="cathedral result" />
-            <figcaption>cathedral • R: (3, 9) • G: (2, 4)</figcaption>
+            <img src="./media/cathedral.jpg" alt="cathedral result (L2)" />
+            <figcaption>cathedral • R: (3, 12) • G: (2, 5)</figcaption>
           </figure>
           <figure>
-            <img src="./media/monastery.jpg" alt="monastery result" />
+            <img src="./media/monastery.jpg" alt="monastery result (L2)" />
             <figcaption>monastery • R: (2, 3) • G: (2, -3)</figcaption>
           </figure>
           <figure>
-            <img src="./media/tobolsk.jpg" alt="tobolsk result" />
+            <img src="./media/tobolsk.jpg" alt="tobolsk result (L2)" />
             <figcaption>tobolsk • R: (3, 6) • G: (3, 3)</figcaption>
           </figure>
-          <figure>
-            <img src="./media/emir.jpg" alt="emir result" />
-            <figcaption>emir • R: (42, 104) • G: (24, 49)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/italil.jpg" alt="italil result" />
-            <figcaption>italil • R: (35, 76) • G: (21, 38)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/church.jpg" alt="church result" />
-            <figcaption>church • R: (-4, 58) • G: (4, 25)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/three_generations.jpg" alt="three_generations result" />
-            <figcaption>three_generations • R: (10, 112) • G: (13, 54)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/lugano.jpg" alt="lugano result" />
-            <figcaption>lugano • R: (-29, 92) • G: (-16, 41)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/melons.jpg" alt="melons result" />
-            <figcaption>melons • R: (14, 178) • G: (11, 82)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/lastochikino.jpg" alt="lastochikino result" />
-            <figcaption>lastochikino • R: (-7, 76) • G: (-1, -3)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/icon.jpg" alt="icon result" />
-            <figcaption>icon • R: (22, 91) • G: (17, 41)</figcaption>
-          </figure>
-          <figure>
-            <img src="media/siren.jpg" alt="siren result" />
-            <figcaption>siren • R: (-26, 97) • G: (-7, 50)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/self_portrait.jpg" alt="self_portrait result" />
-            <figcaption>self_portrait • R: (37, 175) • G: (27, 77)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/harvesters.jpg" alt="harvesters result" />
-            <figcaption>harvesters • R: (14, 124) • G: (17, 60)</figcaption>
-          </figure>
         </div>
+      </section>
 
-        <h3>Offsets Table</h3>
+      <section id="single-offsets-ex-l2">
+        <h3>Single‑Scale (L2) — Example Offsets</h3>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Image</th>
-                <th>Method</th>
                 <th>R offset (dx, dy)</th>
                 <th>G offset (dx, dy)</th>
               </tr>
@@ -229,136 +194,45 @@
             <tbody>
               <tr>
                 <td>cathedral.jpg</td>
-                <td>Single</td>
-                <td>(3, 9)</td>
-                <td>(2, 4)</td>
+                <td>(3, 12)</td>
+                <td>(2, 5)</td>
               </tr>
               <tr>
                 <td>monastery.jpg</td>
-                <td>Single</td>
                 <td>(2, 3)</td>
                 <td>(2, -3)</td>
               </tr>
               <tr>
                 <td>tobolsk.jpg</td>
-                <td>Single</td>
                 <td>(3, 6)</td>
                 <td>(3, 3)</td>
-              </tr>
-              <tr>
-                <td>emir.tif</td>
-                <td>Pyramid</td>
-                <td>(42, 104)</td>
-                <td>(24, 49)</td>
-              </tr>
-              <tr>
-                <td>italil.tif</td>
-                <td>Pyramid</td>
-                <td>(35, 76)</td>
-                <td>(21, 38)</td>
-              </tr>
-              <tr>
-                <td>church.tif</td>
-                <td>Pyramid</td>
-                <td>(-4, 58)</td>
-                <td>(4, 25)</td>
-              </tr>
-              <tr>
-                <td>three_generations.tif</td>
-                <td>Pyramid</td>
-                <td>(10, 112)</td>
-                <td>(13, 54)</td>
-              </tr>
-              <tr>
-                <td>lugano.tif</td>
-                <td>Pyramid</td>
-                <td>(-29, 92)</td>
-                <td>(-16, 41)</td>
-              </tr>
-              <tr>
-                <td>melons.tif</td>
-                <td>Pyramid</td>
-                <td>(14, 178)</td>
-                <td>(11, 82)</td>
-              </tr>
-              <tr>
-                <td>lastochikino.tif</td>
-                <td>Pyramid</td>
-                <td>(-7, 76)</td>
-                <td>(-1, -3)</td>
-              </tr>
-              <tr>
-                <td>icon.tif</td>
-                <td>Pyramid</td>
-                <td>(22, 91)</td>
-                <td>(17, 41)</td>
-              </tr>
-              <tr>
-                <td>siren.tif</td>
-                <td>Pyramid</td>
-                <td>(-26, 97)</td>
-                <td>(-7, 50)</td>
-              </tr>
-              <tr>
-                <td>self_portrait.tif</td>
-                <td>Pyramid</td>
-                <td>(37, 175)</td>
-                <td>(27, 77)</td>
-              </tr>
-              <tr>
-                <td>harvesters.tif</td>
-                <td>Pyramid</td>
-                <td>(14, 124)</td>
-                <td>(17, 60)</td>
               </tr>
             </tbody>
           </table>
         </div>
-
-        <p>
-          Offsets are reported as <strong>(dx, dy)</strong> for the <strong>R</strong> and <strong>G</strong> channels
-          relative to <strong>B</strong> (positive <code>dx</code> = shift right, positive <code>dy</code> = shift down).
-        </p>
       </section>
 
-      <!-- RESULTS: OWN PICKS -->
-      <section id="results-own">
-        <h2>Results (Personal Choices from Prokudin‑Gorskii)</h2>
-
-        <div class="figure-grid" style="margin-top: 12px;">
+      <section id="single-results-custom-l2">
+        <h2>Single‑Scale (L2) — Custom Results</h2>
+        <div class="figure-grid">
           <figure>
-            <img src="./media/forest_road.jpg" alt="forest_road result" />
-            <figcaption>forest_road • R: (1, 10) • G: (-3, 4)</figcaption>
+            <img src="./media/forest_road.jpg" alt="forest_road result (L2)" />
+            <figcaption>forest_road • R: (1, 10) • G: (-3, 3)</figcaption>
           </figure>
           <figure>
-            <img src="./media/courtyard.jpg" alt="courtyard result" />
+            <img src="./media/courtyard.jpg" alt="courtyard result (L2)" />
             <figcaption>courtyard • R: (4, 11) • G: (2, 5)</figcaption>
           </figure>
-          <figure>
-            <img src="./media/piony.jpg" alt="piony result" />
-            <figcaption>piony • R: (-5, 104) • G: (4, 50)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/milan_cathedral.jpg" alt="milan_cathedral result" />
-            <figcaption>milan_cathedral • R: (-54, -4) • G: (-19, 10)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/cherry_tree.jpg" alt="cherry_tree result" />
-            <figcaption>cherry_tree • R: (-83, 22) • G: (-94, -31)</figcaption>
-          </figure>
-          <figure>
-            <img src="./media/island_capri.jpg" alt="island_capri result" />
-            <figcaption>island_capri • R: (-10, 102) • G: (-12, 45)</figcaption>
-          </figure>
         </div>
+      </section>
 
-        <h3>Offsets Table</h3>
+      <section id="single-offsets-custom-l2">
+        <h3>Single‑Scale (L2) — Custom Offsets</h3>
         <div class="table-wrap">
           <table>
             <thead>
               <tr>
                 <th>Image</th>
-                <th>Method</th>
                 <th>R offset (dx, dy)</th>
                 <th>G offset (dx, dy)</th>
               </tr>
@@ -366,43 +240,192 @@
             <tbody>
               <tr>
                 <td>forest_road.jpg</td>
-                <td>Single</td>
                 <td>(1, 10)</td>
-                <td>(-3, 4)</td>
+                <td>(-3, 3)</td>
               </tr>
               <tr>
                 <td>courtyard.jpg</td>
-                <td>Single</td>
                 <td>(4, 11)</td>
                 <td>(2, 5)</td>
-              </tr>
-              <tr>
-                <td>piony.tif</td>
-                <td>Pyramid</td>
-                <td>(-5, 104)</td>
-                <td>(4, 50)</td>
-              </tr>
-              <tr>
-                <td>milan_cathedral.tif</td>
-                <td>Pyramid</td>
-                <td>(-54, -4)</td>
-                <td>(-19, 10)</td>
-              </tr>
-              <tr>
-                <td>cherry_tree.tif</td>
-                <td>Pyramid</td>
-                <td>(-83, 22)</td>
-                <td>(-94, -31)</td>
-              </tr>
-              <tr>
-                <td>island_capri.tif</td>
-                <td>Pyramid</td>
-                <td>(-10, 102)</td>
-                <td>(-12, 45)</td>
               </tr>
             </tbody>
           </table>
         </div>
+      </section>
+
+      <section id="pyramid-results-ex-l2">
+        <h2>Multi‑Level (Pyramid, L2) — Example Results</h2>
+        <div class="figure-grid">
+          <figure>
+            <img src="./media/emir.jpg" alt="emir result (L2)" />
+            <figcaption>emir.tif • R: (-257, 90) • G: (24, 49)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/italil.jpg" alt="italil result (L2)" />
+            <figcaption>italil.tif • R: (35, 76) • G: (21, 38)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/church.jpg" alt="church result (L2)" />
+            <figcaption>church.tif • R: (-4, 58) • G: (4, 25)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/three_generations.jpg" alt="three_generations result (L2)" />
+            <figcaption>three_generations.tif • R: (11, 112) • G: (14, 53)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/lugano.jpg" alt="lugano result (L2)" />
+            <figcaption>lugano.tif • R: (-29, 92) • G: (-16, 41)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/melons.jpg" alt="melons result (L2)" />
+            <figcaption>melons.tif • R: (13, 179) • G: (10, 82)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/lastochikino.jpg" alt="lastochikino result (L2)" />
+            <figcaption>lastochikino.tif • R: (-8, 75) • G: (-2, -2)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/icon.jpg" alt="icon result (L2)" />
+            <figcaption>icon.tif • R: (23, 89) • G: (17, 40)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/siren.jpg" alt="siren result (L2)" />
+            <figcaption>siren.tif • R: (-25, 95) • G: (-6, 49)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/self_portrait.jpg" alt="self_portrait result (L2)" />
+            <figcaption>self_portrait.tif • R: (36, 176) • G: (28, 78)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/harvesters.jpg" alt="harvesters result (L2)" />
+            <figcaption>harvesters.tif • R: (13, 124) • G: (16, 59)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="pyramid-offsets-ex-l2">
+        <h3>Multi‑Level (Pyramid, L2) — Example Offsets</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Image (.tif)</th>
+                <th>R offset (dx, dy)</th>
+                <th>G offset (dx, dy)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>emir.tif</td><td>(-257, 90)</td><td>(24, 49)</td></tr>
+              <tr><td>italil.tif</td><td>(35, 76)</td><td>(21, 38)</td></tr>
+              <tr><td>church.tif</td><td>(-4, 58)</td><td>(4, 25)</td></tr>
+              <tr><td>three_generations.tif</td><td>(11, 112)</td><td>(14, 53)</td></tr>
+              <tr><td>lugano.tif</td><td>(-29, 92)</td><td>(-16, 41)</td></tr>
+              <tr><td>melons.tif</td><td>(13, 179)</td><td>(10, 82)</td></tr>
+              <tr><td>lastochikino.tif</td><td>(-8, 75)</td><td>(-2, -2)</td></tr>
+              <tr><td>icon.tif</td><td>(23, 89)</td><td>(17, 40)</td></tr>
+              <tr><td>siren.tif</td><td>(-25, 95)</td><td>(-6, 49)</td></tr>
+              <tr><td>self_portrait.tif</td><td>(36, 176)</td><td>(28, 78)</td></tr>
+              <tr><td>harvesters.tif</td><td>(13, 124)</td><td>(16, 59)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="pyramid-results-custom-l2">
+        <h2>Multi‑Level (Pyramid, L2) — Custom Results</h2>
+        <div class="figure-grid">
+          <figure>
+            <img src="./media/cherry_tree.jpg" alt="cherry_tree result (L2)" />
+            <figcaption>cherry_tree.tif • R: (-82, 22) • G: (-94, -30)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/island_capri.jpg" alt="island_capri result (L2)" />
+            <figcaption>island_capri.tif • R: (-10, 102) • G: (-13, 40)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/milan_cathedral.jpg" alt="milan_cathedral result (L2)" />
+            <figcaption>milan_cathedral.tif • R: (-53, -3) • G: (-19, -9)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/piony.jpg" alt="piony result (L2)" />
+            <figcaption>piony.tif • R: (-6, 104) • G: (3, 51)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="pyramid-offsets-custom-l2">
+        <h3>Multi‑Level (Pyramid, L2) — Custom Offsets</h3>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Image (.tif)</th>
+                <th>R offset (dx, dy)</th>
+                <th>G offset (dx, dy)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>cherry_tree.tif</td><td>(-82, 22)</td><td>(-94, -30)</td></tr>
+              <tr><td>island_capri.tif</td><td>(-10, 102)</td><td>(-13, 40)</td></tr>
+              <tr><td>milan_cathedral.tif</td><td>(-53, -3)</td><td>(-19, -9)</td></tr>
+              <tr><td>piony.tif</td><td>(-6, 104)</td><td>(3, 51)</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="misalignment">
+        <h2>Misalignment — <code>emir.tif</code> (L2 vs L1)</h2>
+        <p>
+          With <strong>L2</strong>, the squared error emphasizes large brightness differences between channels.
+          In <code>emir.tif</code>, the red robe and skin tones differ a lot across B/G/R exposures, so L2 over‑weights those
+          mismatched intensities and can lock onto a poor alignment (very large erroneous shift). Switching to <strong>L1</strong>
+          makes the score more robust by linearizing those differences, producing a visually correct alignment.
+        </p>
+        <div class="figure-grid">
+          <figure>
+            <img src="./media/emir_l2.jpg" alt="emir misaligned (L2)" />
+            <figcaption>Before — L2 (misaligned) • R: (-257, 90) • G: (24, 49)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/emir_l1.jpg" alt="emir corrected (L1)" />
+            <figcaption>After — L1 (corrected)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- RESULTS: OWN PICKS -->
+      
+
+      <!-- FAILURES / ANALYSIS -->
+      <section id="failures">
+        <h2>Misalignments & Analysis</h2>
+        <p>
+          If any images failed to align cleanly, briefly explain hypotheses and attempted fixes.
+        </p>
+        <ul>
+          <li><strong>High‑contrast borders</strong> (black/white frames) biased the metric → fixed by cropping 6–10%.</li>
+          <li><strong>Brightness/contrast differences</strong> across channels → tried gradient/edge maps before scoring.</li>
+          <li><strong>Fine repetitive texture</strong> (e.g., bricks) → used pyramid + smaller refine window at finer levels.</li>
+          <li><strong>Motion between plates</strong> (subject moved) → residual ghosting noted in captions.</li>
+          <li><strong>Non‑rigid distortions</strong> (lens/scan) → outside scope of rigid shift; minor blur left.</li>
+        </ul>
+        <p class="small"><span class="todo">TODO:</span> Drop in thumbnails of any problematic outputs and 1–2 lines describing what you tried.</p>
+
+        <h3>Runtime Notes</h3>
+        <ul>
+          <li>Single‑scale exhaustive search over ±w took ~__ s per image at full resolution.</li>
+          <li>Pyramid (levels: __) cut runtime to ~__ s with similar/better accuracy.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>Repro & File Notes</h2>
+        <ul>
+          <li>All images on this page are compressed (<code>.jpg</code>/<code>.png</code>); <em>no</em> large <code>.tif</code> files are included.</li>
+          <li>Offsets reported as <code>(dx, dy)</code> with <code>dx</code>=right, <code>dy</code>=down relative to <strong>B</strong>.</li>
+          <li>Output naming I used: <code>name_method_metric.jpg</code> (e.g., <code>emir_pyramid_l1.jpg</code>).</li>
+        </ul>
       </section>
     </main>
   </div>
