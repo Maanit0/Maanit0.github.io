@@ -86,7 +86,6 @@
         <a href="#pyramid">Multi‑Level Alignment (Image Pyramid)</a>
         <a href="#misalignment">Misalignment: emir (L2 → L1)</a>
       </nav>
-      <div class="small" style="margin-top:10px;">Tip: use JPG/PNG only. Don’t upload the large .tif files.</div>
     </aside>
 
     <main>
@@ -106,16 +105,16 @@
           <li><strong>Multi‑Level pyramid search</strong> that aligns from coarse to fine scales for speed and robustness.</li>
         </ol>
         <div class="callout">
-          <strong>Metrics.</strong> I experimented with L1, L2, and NCC (normalized cross‑correlation). Cropping ~5–10% off
-          borders before scoring improved stability by avoiding misguiding edges.
+          <strong>Metrics.</strong> I experimented with L1 norm (Manhattan distance) and L2 norm (Euclidean distance). Cropping 6% off
+          off the max dimension of the images before scoring improved stability, as taking into account border pixels while scoring led to misalignment issues.
         </div>
-        <p class="small">If any images proved difficult, I describe what went wrong and how I tried to fix it in
-          <a href="#failures">Misalignments & Analysis</a>.</p>
+        <p class="small">One image was difficult to align. I describe what went wrong and how I fixed it in
+          <a href="#failures">Misalignments</a>.</p>
       </section>
 
       <!-- SINGLE SCALE -->
       <section id="single">
-        <h2>Single‑Scale Alignment — Approach</h2>
+        <h2>Single‑Scale Alignment Approach</h2>
         <p>
           I treat the <strong>blue (B)</strong> channel as the fixed reference. For each of the <strong>red (R)</strong>
           and <strong>green (G)</strong> channels, I exhaustively search integer shifts from <strong>−15 to +15 pixels</strong>
@@ -124,10 +123,8 @@
           misleading border artifacts from the plate splits.
         </p>
         <ul>
-          <li><strong>Metrics tested:</strong> L2 (squared‑error), L1 (sum of absolute differences), and NCC (normalized cross‑correlation).</li>
-          <li><strong>Selection rule:</strong> choose the shift that minimizes L1/L2 or maximizes NCC.</li>
-          <li><strong>What I use most:</strong> L1, because the three channels often differ in brightness/contrast; L1’s absolute‑difference
-            error is noticeably more stable than L2/NCC under those conditions.</li>
+          <li><strong>Metrics tested:</strong> L2 (squared‑error). </li>
+          <li><strong>Selection rule:</strong> choose the shift that minimizes L2 error. </li>
           <li><strong>Finalize:</strong> apply the chosen shifts to the <em>uncropped</em> R and G, then stack into an RGB image.</li>
         </ul>
         <p class="small">Offsets are reported as <code>(dx, dy)</code> for R and G relative to B (<code>+dx</code> right, <code>+dy</code> down).</p>
@@ -138,7 +135,7 @@
 
       <!-- RESULTS: PROVIDED IMAGES -->
       <section id="single-results-ex-l2">
-        <h2>Single‑Scale (L2) — Example Results</h2>
+        <h2>Single‑Scale (L2 Norm): Example Results</h2>
         <div class="figure-grid">
           <figure>
             <img src="./media/cathedral_l2_norm.jpg" alt="cathedral result (L2)" />
@@ -156,7 +153,7 @@
       </section>
 
       <section id="single-offsets-ex-l2">
-        <h3>Single‑Scale (L2) — Example Offsets</h3>
+        <h3>Single‑Scale (L2 Norm): Example Offsets</h3>
         <div class="table-wrap">
           <table>
             <thead>
@@ -188,7 +185,7 @@
       </section>
 
       <section id="single-results-custom-l2">
-        <h2>Single‑Scale (L2) — Custom Results</h2>
+        <h2>Single‑Scale (L2 Norm): Custom Results</h2>
         <div class="figure-grid">
           <figure>
             <img src="./media/forest_road_l2_norm.jpg" alt="forest_road result (L2)" />
@@ -202,7 +199,7 @@
       </section>
 
       <section id="single-offsets-custom-l2">
-        <h3>Single‑Scale (L2) — Custom Offsets</h3>
+        <h3>Single‑Scale (L2 Norm): Custom Offsets</h3>
         <div class="table-wrap">
           <table>
             <thead>
@@ -229,7 +226,7 @@
       </section>
 
       <section id="pyramid">
-        <h2>Multi‑Level Alignment (Image Pyramid) — Approach</h2>
+        <h2>Multi‑Level Alignment (Image Pyramid) Approach</h2>
         <p>
           To make alignment on large <code>.tif</code> plates both <em>faster</em> and <em>more robust</em>, I use a
           <strong>4‑level Gaussian pyramid</strong> for each channel (repeatedly downsampling by 2× until either four
@@ -243,11 +240,11 @@
           <li><strong>Repeat:</strong> repeat the propagate‑and‑refine step until full resolution; then apply the final shifts to the
             <em>uncropped</em> R and G and stack into RGB.</li>
         </ol>
-        <p class="small">At every level, scoring uses the same cropped‑interior trick (~6%) to avoid border bias. This pyramid cut runtime substantially on high‑res images while improving reliability on challenging scenes.</p>
+        <p class="small">Before scoring alignments, I used the same cropped‑interior trick (~6%) to avoid border bias. This pyramid sped up runtime substantially on high‑res images while improving reliability on challenging scenes.</p>
       </section>
 
       <section id="pyramid-results-ex-l2">
-        <h2>Multi‑Level (Pyramid, L2) — Example Results</h2>
+        <h2>Multi‑Level (Pyramid, L2): Example Results</h2>
         <div class="figure-grid">
           <figure>
             <img src="./media/emir_l2_norm.jpg" alt="emir result (L2)" />
@@ -297,7 +294,7 @@
       </section>
 
       <section id="pyramid-offsets-ex-l2">
-        <h3>Multi‑Level (Pyramid, L2) — Example Offsets</h3>
+        <h3>Multi‑Level (Pyramid, L2): Example Offsets</h3>
         <div class="table-wrap">
           <table>
             <thead>
@@ -325,7 +322,7 @@
       </section>
 
       <section id="pyramid-results-custom-l2">
-        <h2>Multi‑Level (Pyramid, L2) — Custom Results</h2>
+        <h2>Multi‑Level (Pyramid, L2): Custom Results</h2>
         <div class="figure-grid">
           <figure>
             <img src="./media/cherry_tree_l2_norm.jpg" alt="cherry_tree result (L2)" />
@@ -347,7 +344,7 @@
       </section>
 
       <section id="pyramid-offsets-custom-l2">
-        <h3>Multi‑Level (Pyramid, L2) — Custom Offsets</h3>
+        <h3>Multi‑Level (Pyramid, L2): Custom Offsets</h3>
         <div class="table-wrap">
           <table>
             <thead>
@@ -382,44 +379,12 @@
           </figure>
           <figure>
             <img src="./media/emir_l1_norm.jpg" alt="emir corrected (L1)" />
-            <figcaption>After — L1 (corrected)</figcaption>
+            <figcaption>After — L1 (corrected) • R: (42, 104) • G: (24, 49) </figcaption>
           </figure>
         </div>
       </section>
 
       <!-- RESULTS: OWN PICKS -->
-      
-
-      <!-- FAILURES / ANALYSIS -->
-      <section id="failures">
-        <h2>Misalignments & Analysis</h2>
-        <p>
-          If any images failed to align cleanly, briefly explain hypotheses and attempted fixes.
-        </p>
-        <ul>
-          <li><strong>High‑contrast borders</strong> (black/white frames) biased the metric → fixed by cropping 6–10%.</li>
-          <li><strong>Brightness/contrast differences</strong> across channels → tried gradient/edge maps before scoring.</li>
-          <li><strong>Fine repetitive texture</strong> (e.g., bricks) → used pyramid + smaller refine window at finer levels.</li>
-          <li><strong>Motion between plates</strong> (subject moved) → residual ghosting noted in captions.</li>
-          <li><strong>Non‑rigid distortions</strong> (lens/scan) → outside scope of rigid shift; minor blur left.</li>
-        </ul>
-        <p class="small"><span class="todo">TODO:</span> Drop in thumbnails of any problematic outputs and 1–2 lines describing what you tried.</p>
-
-        <h3>Runtime Notes</h3>
-        <ul>
-          <li>Single‑scale exhaustive search over ±w took ~__ s per image at full resolution.</li>
-          <li>Pyramid (levels: __) cut runtime to ~__ s with similar/better accuracy.</li>
-        </ul>
-      </section>
-
-      <section>
-        <h2>Repro & File Notes</h2>
-        <ul>
-          <li>All images on this page are compressed (<code>.jpg</code>/<code>.png</code>); <em>no</em> large <code>.tif</code> files are included.</li>
-          <li>Offsets reported as <code>(dx, dy)</code> with <code>dx</code>=right, <code>dy</code>=down relative to <strong>B</strong>.</li>
-          <li>Output naming I used: <code>name_method_metric.jpg</code> (e.g., <code>emir_pyramid_l1.jpg</code>).</li>
-        </ul>
-      </section>
     </main>
   </div>
 
