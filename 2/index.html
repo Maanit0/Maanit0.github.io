@@ -368,9 +368,9 @@
         <h2>Misalignment — <code>emir.tif</code> (L2 vs L1)</h2>
         <p>
           With <strong>L2</strong>, the squared error emphasizes large brightness differences between channels.
-          In <code>emir.tif</code>, the red robe and skin tones differ a lot across B/G/R exposures, so L2 over‑weights those
-          mismatched intensities and can lock onto a poor alignment (very large erroneous shift). Switching to <strong>L1</strong>
-          makes the score more robust by linearizing those differences, producing a visually correct alignment.
+          In <code>emir.tif</code>, the robe and skin tones differ a lot across B/G/R exposures (especially between the B and R channels), so L2 exacerbates those
+          mismatched pixel intensities, which leads to poor alignment (a very large erroneous shift in the red channel). Switching to <strong>L1</strong>
+          makes the score more robust by stabilizing those differences by just computing absolute value differences instead of square differences, producing a visually correct alignment.
         </p>
         <div class="figure-grid">
           <figure>
