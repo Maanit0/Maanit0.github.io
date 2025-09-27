@@ -288,7 +288,7 @@ def convolve_2loops(im, kernel):
     <h2>Part 2.1: Image "Sharpening"</h2>
     <h3>Unsharp Mask Filter Explanation</h3>
     <p>To “sharpen,” we add back a portion of an image’s high frequencies (fine details). Compute <code>high = original − (original * gaussian)</code>, then
-    <code>Sharpened = original − a · high = original − a · (original − original * gaussian), where a dictates the amount of the high frequencies we add abck in. </code>.</p>
+    <code>Sharpened = original − a · high = original − a · (original − original * gaussian), where a dictates the amount of the high frequencies we add back in. </code>.</p>
     <p>Equivalently, this is a single convolution with an unsharp mask:
     <code>Sharpened = original * ((1 + a)·e − a·gaussian)</code>, where <code>e</code> is an impulse (all zeros except a 1 at the center) the same size as the Gaussian. This boosts the original via <code>(1+a)·e</code> and subtracts low frequencies via <code>a·gaussian</code>, enhancing high-frequency detail.</p>
 
@@ -311,6 +311,17 @@ def convolve_2loops(im, kernel):
       <figure><img src="./media/taj_a0.5.jpg" alt="Taj a=0.5" /><figcaption>a=0.5</figcaption></figure>
       <figure><img src="./media/taj_a0.7.jpg" alt="Taj a=0.7" /><figcaption>a=0.7</figcaption></figure>
       <figure><img src="./media/taj_a1.jpg" alt="Taj a=1" /><figcaption>a=1</figcaption></figure>
+    </div>
+
+    <div class="grid">
+      <figure>
+        <img src="./media/blurred_jm.jpg" alt="Blurred John Mayer" />
+        <figcaption>Blurred John Mayer</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/hf_jm.jpg" alt="High Frequencies of John Mayer" />
+        <figcaption>High-Frequencies of John Mayer</figcaption>
+      </figure>
     </div>
 
     <h3>John Mayer — Unsharp Mask Filter Results</h3>
