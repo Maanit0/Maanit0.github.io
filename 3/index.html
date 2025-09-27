@@ -50,6 +50,11 @@
       display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
     img.big { width: 420px; max-width: 100%; }
+    /* Slightly reduce final hybrid images */
+    img[src$="hybrid_derek_nutmeg.jpg"],
+    img[src$="hybrid_curl1_curl2.jpg"],
+    img[src$="curry_hybrid_curry_lebron.jpg"] { width: 75%; max-width: 260px; }
+
     img { max-width: 100%; height: auto; display: block; }
     figcaption { font-size: 13px; color: #333; }
     .caption { font-size: 13px; color: #333; margin-top: 6px; }
@@ -77,6 +82,65 @@
   <!-- ========================= Part 1.1 ========================= -->
   <section id="part-11">
     <h2>Part 1.1: Convolution Implementations</h2>
+    <h3>2D Convolution (Implementations)</h3>
+<pre><code class="language-python">def convolve_4loops(im, kernel):
+
+    im = np.asarray(im, dtype=float)
+    kernel = np.asarray(kernel, dtype=float)
+
+    flipped_k = np.flip(kernel)
+    
+    im_h, im_w = im.shape
+    k_h, k_w = flipped_k.shape
+
+    pad_h = k_h - 1
+    pad_w = k_w - 1
+    im_padded = np.pad(im, ((pad_h, pad_h), (pad_w, pad_w)), mode = 'constant', constant_values = 0)
+    
+    out_h = im_h + k_h - 1
+    out_w = im_w + k_w - 1
+    out = np.zeros((out_h, out_w))
+
+    for i in range(out_h):
+        for j in range(out_w):
+            for r in range(k_h):
+                for c in range(k_w):
+                    out[i,j] +=  im_padded[i + r, j + c] * flipped_k[r, c]
+
+    return out
+
+def convolve_2loops(im, kernel):
+
+    im = np.asarray(im, dtype=float)
+    kernel = np.asarray(kernel, dtype=float)
+
+    flipped_k = np.flip(kernel)
+    
+    im_h, im_w = im.shape
+    k_h, k_w = flipped_k.shape
+
+    pad_h = k_h - 1
+    pad_w = k_w - 1
+    im_padded = np.pad(im, ((pad_h, pad_h), (pad_w, pad_w)), mode = 'constant', constant_values = 0)
+    
+    out_h = im_h + k_h - 1
+    out_w = im_w + k_w - 1
+    out = np.zeros((out_h, out_w))
+
+    for i in range(out_h):
+        for j in range(out_w):
+            out[i,j] = np.sum(im_padded[i : i + k_h, j: j + k_w] * flipped_k)
+
+    return out</code></pre>
+
+<h3>Runtime & Boundaries</h3>
+<p><strong>Runtime.</strong> 9×9 box filter on my selfie — 4-loops: 6m16s; 2-loops: 1m06s (~5.5× faster than 4-loops); SciPy <code>convolve2d</code>: ~1s (~360× faster than 4-loops).</p>
+<p class="small"><strong>Runtime Convolution Results (selfie × 9×9)</strong><br>
+4 Loop Implementation: ~6m16s<br>
+2 Loop Implementation: ~1m06s<br>
+<code>scipy.signal.convolve2D</code>: ~1s</p>
+<p><strong>Boundaries.</strong> Zero-padding with (k<sub>w</sub>−1) columns left/right and (k<sub>h</sub>−1) rows top/bottom (full convolution), matching <code>mode='full'</code> in <code>scipy.signal.convolve2d</code>, ensures every boundary pixel is covered exactly once by the kernel.</p>
+
     <table>
       <tr>
         <th>9x9 Box Filter (Selfie)</th>
@@ -145,6 +209,8 @@
         </td>
       </tr>
     </table>
+    <p class="small"><strong>Threshold choice.</strong> I found a gradient-magnitude threshold of <code>0.27</code> (values &gt; > 0.27 → 255; ≤ 0.27 → 0) to balance showing most edges while suppressing noise.</p>
+
   </section>
 
   <!-- ========================= Part 1.3 ========================= -->
@@ -170,6 +236,8 @@
         <figcaption>Blurry Cameraman convolved with D<sub>y</sub></figcaption>
       </figure>
     </div>
+
+    
 
     <h3>DoG Filters</h3>
     <div class="grid">
@@ -210,11 +278,20 @@
         <figcaption>Finite Difference Method</figcaption>
       </figure>
     </div>
+
+    <p><strong>DoG vs. Finite Differences.</strong> The DoG convolutions produce brighter, more numerous edges with less noise than the finite-difference result. This matches the gradient from first blurring with a Gaussian then applying derivative filters, which shows the associative property of convolution.</p>
+
   </section>
 
   <!-- ========================= Part 2.1 ========================= -->
   <section id="part-21">
     <h2>Part 2.1: Image "Sharpening"</h2>
+    <h3>Unsharp Mask Filter Explanation</h3>
+    <p>To “sharpen,” we add back a portion of an image’s high frequencies (fine details). Compute <code>high = original − (original * gaussian)</code>, then
+    <code>Sharpened = original − a · high = original − a · (original − original * gaussian), where a dictates the amount of the high frequencies we add abck in. </code>.</p>
+    <p>Equivalently, this is a single convolution with an unsharp mask:
+    <code>Sharpened = original * ((1 + a)·e − a·gaussian)</code>, where <code>e</code> is an impulse (all zeros except a 1 at the center) the same size as the Gaussian. This boosts the original via <code>(1+a)·e</code> and subtracts low frequencies via <code>a·gaussian</code>, enhancing high-frequency detail.</p>
+
     <div class="grid">
       <figure>
         <img src="./media/blurred_taj.jpg" alt="Blurred Taj Mahal" />
@@ -245,6 +322,10 @@
       <figure><img src="./media/jm_a0.7.jpg" alt="JM a=0.7" /><figcaption>a=0.7</figcaption></figure>
       <figure><img src="./media/jm_a1.0.jpg" alt="JM a=1" /><figcaption>a=1</figcaption></figure>
     </div>
+
+    <h3>Varying Sharpening Amount:</h3>
+    <p>Increasing the sharpening amount emphasizes high frequencies more, yielding a crisper look. Because fine details live in the high frequencies, adding more of them back enhances detail—but too much can amplify noise and halos.</p>
+
 
     <h3>Evaluation (Taj)</h3>
     <div class="grid">
