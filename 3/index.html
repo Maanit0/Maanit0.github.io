@@ -1,214 +1,687 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>CS180 Project 3: Frequencies and Blending</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>CS180 Project 2 Report</title>
   <style>
-    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; max-width: 1200px; }
-    h1, h2, h3, h4 { color: #333; }
-    img { max-width: 100%; height: auto; margin: 5px 0; border: 1px solid #ddd; }
-    .grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-    .grid img { flex: 1 1 30%; }
-    .caption { font-size: 0.9em; color: #555; text-align: center; margin-bottom: 20px; }
-    pre { background: #f7f7f7; padding: 10px; overflow-x: auto; border: 1px solid #ccc; }
+    :root {
+      --border: #ddd;
+      --muted: #666;
+      --accent: #0b6cff;
+      --bg: #fff;
+    }
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
+      margin: 24px;
+      color: #111;
+      background: var(--bg);
+      line-height: 1.55;
+    }
+    header { margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 28px; }
+    h2 { margin-top: 36px; padding-top: 8px; border-top: 2px solid var(--border); font-size: 22px; }
+    h3 { margin-top: 20px; font-size: 18px; color: #222; }
+    p.note { color: var(--muted); font-size: 14px; margin: 6px 0 18px; }
+    nav {
+      position: sticky; top: 0; background: var(--bg); padding: 10px 0; margin-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+    nav .toc {
+      display: flex; flex-wrap: wrap; gap: 10px 14px;
+      font-size: 14px;
+    }
+    nav a { color: var(--accent); text-decoration: none; }
+    nav a:hover { text-decoration: underline; }
+
+    table { width: 100%; border-collapse: collapse; margin: 16px 0 26px; table-layout: fixed; }
+    th, td { border: 1px solid var(--border); padding: 10px; text-align: center; vertical-align: top; }
+    th { background: #fafafa; font-weight: 600; }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin: 12px 0 26px;
+    }
+    figure {
+      margin: 0; padding: 10px; border: 1px dashed var(--border); border-radius: 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+    }
+    img { max-width: 100%; height: auto; display: block; }
+    figcaption { font-size: 13px; color: #333; }
+    .caption { font-size: 13px; color: #333; margin-top: 6px; }
+    .small { font-size: 12px; color: var(--muted); }
+    code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
   </style>
 </head>
 <body>
+  <header>
+    <h1>CS180 Project 2</h1>
+    <p class="note">This page mirrors the outline and image tables from the project PDF. All image filenames below match the PDF tables exactly.</p>
+  </header>
 
-<h1>CS180 Project 3: Frequencies and Blending</h1>
-<p><strong>Name:</strong> Maanit Sharma</p>
+  <nav>
+    <div class="toc">
+      <a href="#part-11">Part 1.1</a>
+      <a href="#part-12">Part 1.2</a>
+      <a href="#part-13">Part 1.3 (DoG)</a>
+      <a href="#part-21">Part 2.1 (Sharpening)</a>
+      <a href="#part-22">Part 2.2 (Hybrid Images)</a>
+      <a href="#part-23-24">Part 2.3 + 2.4 (Stacks & Blending)</a>
+    </div>
+  </nav>
 
-<p><strong>Most important thing I learned:</strong> The project taught me how to use frequency analysis for creative and technical image manipulation. Convolution, Gaussian smoothing, and Laplacian pyramids aren’t just theoretical — they directly enable hybrid images, sharpening, and blending. It showed me the power of mathematical tools in visual perception.</p>
+  <!-- ========================= Part 1.1 ========================= -->
+  <section id="part-11">
+    <h2>Part 1.1: Convolution Implementations</h2>
+    <table>
+      <tr>
+        <th>9x9 Box Filter (Selfie)</th>
+        <th>D<sub>x</sub> Filter (Selfie)</th>
+        <th>D<sub>y</sub> Filter (Selfie)</th>
+      </tr>
+      <tr>
+        <td>
+          <figure>
+            <img src="./media/selfie_box_4loop.jpg" alt="Selfie Box Filter 4 Loop" />
+            <figcaption>4 Loop Implementation</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/selfie_box_2loop.jpg" alt="Selfie Box Filter 2 Loop" />
+            <figcaption>2 Loop Implementation</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/selfie_box_scipy.jpg" alt="Selfie Box Filter SciPy" />
+            <figcaption>scipy.signal.convolve2d</figcaption>
+          </figure>
+        </td>
+        <td>
+          <figure>
+            <img src="./media/selfie_Dx_2loop.jpg" alt="Selfie Dx 2 Loop" />
+            <figcaption>2 Loop Implementation</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/selfie_Dx_scipy.jpg" alt="Selfie Dx SciPy" />
+            <figcaption>scipy.signal.convolve2d</figcaption>
+          </figure>
+        </td>
+        <td>
+          <figure>
+            <img src="./media/selfie_Dy_2loop.jpg" alt="Selfie Dy 2 Loop" />
+            <figcaption>2 Loop Implementation</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/selfie_Dy_scipy.jpg" alt="Selfie Dy SciPy" />
+            <figcaption>scipy.signal.convolve2d</figcaption>
+          </figure>
+        </td>
+      </tr>
+    </table>
+  </section>
 
-<hr>
+  <!-- ========================= Part 1.2 ========================= -->
+  <section id="part-12">
+    <h2>Part 1.2: D<sub>x</sub>, D<sub>y</sub>, Gradient Magnitude &amp; Edge</h2>
+    <table>
+      <tr>
+        <td>
+          <img src="./media/camerman_dx_scipy.jpg" alt="Cameraman Dx" />
+          <div class="caption">D<sub>x</sub></div>
+        </td>
+        <td>
+          <img src="./media/camerman_dy_scipy.jpg" alt="Cameraman Dy" />
+          <div class="caption">D<sub>y</sub></div>
+        </td>
+        <td>
+          <img src="./media/camerman_grad_mag.jpg" alt="Cameraman Gradient Magnitude" />
+          <div class="caption">Gradient Magnitude</div>
+        </td>
+        <td>
+          <img src="./media/camerman_binarized_edge.jpg" alt="Cameraman Binarized Edge" />
+          <div class="caption">Binarized Edge</div>
+        </td>
+      </tr>
+    </table>
+  </section>
 
-<h2>Part 1: Filters and Edges</h2>
+  <!-- ========================= Part 1.3 ========================= -->
+  <section id="part-13">
+    <h2>Part 1.3: Derivative of Gaussian (DoG) Filter</h2>
 
-<h3>1.1 Convolutions from Scratch</h3>
-<p>I implemented convolution in two ways: using 4 loops and using 2 loops. Both methods pad the image, flip the kernel, and compute the output. The 4-loop implementation iterates over each pixel and each kernel element, while the 2-loop implementation leverages <code>np.sum</code> to collapse the inner loops. Finally, I compared my results to <code>scipy.signal.convolve2d</code>.</p>
+    <h3>2D Gaussian Filter & Convolutions</h3>
+    <figure>
+      <img src="./media/2d_gaussian_filter.jpg" alt="2D Gaussian Filter (size=9, sigma=1.5)" />
+      <figcaption>2D Gaussian Filter (size = 9, sigma = 1.5)</figcaption>
+    </figure>
+    <div class="grid">
+      <figure>
+        <img src="./media/blurred_camerman.jpg" alt="Blurred Cameraman" />
+        <figcaption>Cameraman convolved with 2D Gaussian</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/blurred_camerman_d_x.jpg" alt="Blurred + Dx" />
+        <figcaption>Blurry Cameraman convolved with D<sub>x</sub></figcaption>
+      </figure>
+      <figure>
+        <img src="./media/blurred_camerman_d_y.jpg" alt="Blurred + Dy" />
+        <figcaption>Blurry Cameraman convolved with D<sub>y</sub></figcaption>
+      </figure>
+    </div>
 
-<pre>
-def convolve_4loops(im, kernel):
-    im = np.asarray(im, dtype=float)
-    kernel = np.asarray(kernel, dtype=float)
-    flipped_k = np.flip(kernel)
-    im_h, im_w = im.shape
-    k_h, k_w = flipped_k.shape
-    pad_h, pad_w = k_h - 1, k_w - 1
-    im_padded = np.pad(im, ((pad_h, pad_h), (pad_w, pad_w)), 
-                       mode='constant', constant_values=0)
-    out_h, out_w = im_h + k_h - 1, im_w + k_w - 1
-    out = np.zeros((out_h, out_w))
-    for i in range(out_h):
-        for j in range(out_w):
-            for r in range(k_h):
-                for c in range(k_w):
-                    out[i, j] += im_padded[i + r, j + c] * flipped_k[r, c]
-    return out
-</pre>
+    <h3>DoG Filters</h3>
+    <div class="grid">
+      <figure>
+        <img src="./media/D_x_gaussian_filter.jpg" alt="Derivative of Gaussian X" />
+        <figcaption>Derivative of Gaussian (X Direction)</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/D_y_gaussian_filter.jpg" alt="Derivative of Gaussian Y" />
+        <figcaption>Derivative of Gaussian (Y Direction)</figcaption>
+      </figure>
+    </div>
 
-<pre>
-def convolve_2loops(im, kernel):
-    im = np.asarray(im, dtype=float)
-    kernel = np.asarray(kernel, dtype=float)
-    flipped_k = np.flip(kernel)
-    im_h, im_w = im.shape
-    k_h, k_w = flipped_k.shape
-    pad_h, pad_w = k_h - 1, k_w - 1
-    im_padded = np.pad(im, ((pad_h, pad_h), (pad_w, pad_w)), 
-                       mode='constant', constant_values=0)
-    out_h, out_w = im_h + k_h - 1, im_w + k_w - 1
-    out = np.zeros((out_h, out_w))
-    for i in range(out_h):
-        for j in range(out_w):
-            out[i, j] = np.sum(im_padded[i:i+k_h, j:j+k_w] * flipped_k)
-    return out
-</pre>
+    <h3>DoG Convolutions</h3>
+    <div class="grid">
+      <figure>
+        <img src="./media/camerman_dog_x.jpg" alt="Cameraman DoG X" />
+        <figcaption>Cameraman convolved with DoG (x)</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/camerman_dog_y.jpg" alt="Cameraman DoG Y" />
+        <figcaption>Cameraman convolved with DoG (y)</figcaption>
+      </figure>
+    </div>
 
-<p><strong>Comparison with <code>scipy.signal.convolve2d</code>:</strong> My outputs match exactly. Runtime is slower for my versions (especially 4-loop) due to explicit Python iteration. <code>scipy</code> uses optimized C under the hood. For boundaries, my method zero-pads, while <code>convolve2d</code> offers multiple modes (fill, wrap, symmetric).</p>
+    <h3>Gradient Magnitude Comparison</h3>
+    <div class="grid">
+      <figure>
+        <img src="./media/smoothed_camerman_grad_mag.jpg" alt="Smoothed + Derivative Grad Mag" />
+        <figcaption>Gaussian Smoothing + Derivative Filters</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/camerman_dog_grad_mag.jpg" alt="DoG Grad Mag" />
+        <figcaption>DoG Filters</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/camerman_grad_mag.jpg" alt="Finite Difference Grad Mag" />
+        <figcaption>Finite Difference Method</figcaption>
+      </figure>
+    </div>
+  </section>
 
-<div class="grid">
-  <img src="cameraman_dx.jpg"><div class="caption">Cameraman convolved with dx filter</div>
-  <img src="cameraman_dy.jpg"><div class="caption">Cameraman convolved with dy filter</div>
-  <img src="scipy_convolve.jpg"><div class="caption">scipy.convolve2d result</div>
-</div>
+  <!-- ========================= Part 2.1 ========================= -->
+  <section id="part-21">
+    <h2>Part 2.1: Image "Sharpening"</h2>
+    <div class="grid">
+      <figure>
+        <img src="./media/blurred_taj.jpg" alt="Blurred Taj Mahal" />
+        <figcaption>Blurred Taj Mahal</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/hf_taj.jpg" alt="High Frequencies of Taj" />
+        <figcaption>High-Frequencies of Taj Mahal</figcaption>
+      </figure>
+    </div>
 
-<div class="grid">
-  <img src="selfie_dx.jpg"><div class="caption">My Selfie with dx filter</div>
-  <img src="selfie_dy.jpg"><div class="caption">My Selfie with dy filter</div>
-</div>
+    <h3>Taj Mahal — Unsharp Mask Filter Results</h3>
+    <div class="grid">
+      <figure><img src="./media/taj_a0.jpg" alt="Taj a=0" /><figcaption>a=0 (original)</figcaption></figure>
+      <figure><img src="./media/taj_a0.1.jpg" alt="Taj a=0.1" /><figcaption>a=0.1</figcaption></figure>
+      <figure><img src="./media/taj_a0.3.jpg" alt="Taj a=0.3" /><figcaption>a=0.3</figcaption></figure>
+      <figure><img src="./media/taj_a0.5.jpg" alt="Taj a=0.5" /><figcaption>a=0.5</figcaption></figure>
+      <figure><img src="./media/taj_a0.7.jpg" alt="Taj a=0.7" /><figcaption>a=0.7</figcaption></figure>
+      <figure><img src="./media/taj_a1.jpg" alt="Taj a=1" /><figcaption>a=1</figcaption></figure>
+    </div>
 
-<h3>1.2 Finite Difference Operator</h3>
-<p>I applied finite difference filters <code>dx = [[1, -1]]</code> and <code>dy = [[1], [-1]]</code> to the cameraman image to compute partial derivatives. I then calculated the gradient magnitude image and binarized it to detect edges.</p>
+    <h3>John Mayer — Unsharp Mask Filter Results</h3>
+    <div class="grid">
+      <figure><img src="./media/jm_a0.jpg" alt="JM a=0" /><figcaption>a=0 (original)</figcaption></figure>
+      <figure><img src="./media/jm_a0.1.jpg" alt="JM a=0.1" /><figcaption>a=0.1</figcaption></figure>
+      <figure><img src="./media/jm_a0.3.jpg" alt="JM a=0.3" /><figcaption>a=0.3</figcaption></figure>
+      <figure><img src="./media/jm_a0.5.jpg" alt="JM a=0.5" /><figcaption>a=0.5</figcaption></figure>
+      <figure><img src="./media/jm_a0.7.jpg" alt="JM a=0.7" /><figcaption>a=0.7</figcaption></figure>
+      <figure><img src="./media/jm_a1.jpg" alt="JM a=1" /><figcaption>a=1</figcaption></figure>
+    </div>
 
-<div class="grid">
-  <img src="cameraman_dx.jpg"><div class="caption">Partial Derivative in x</div>
-  <img src="cameraman_dy.jpg"><div class="caption">Partial Derivative in y</div>
-  <img src="cameraman_gradmag.jpg"><div class="caption">Gradient Magnitude</div>
-</div>
+    <h3>Evaluation (Taj)</h3>
+    <div class="grid">
+      <figure>
+        <img src="./media/taj.jpg" alt="Original Taj" />
+        <figcaption>Original Image</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/sharpened_blurred_taj_a1.jpg" alt="Sharpened a=1" />
+        <figcaption>Sharpened Blurred (a=1)</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/sharpened_blurred_taj_a10.jpg" alt="Sharpened a=10" />
+        <figcaption>Sharpened Blurred (a=10)</figcaption>
+      </figure>
+    </div>
+  </section>
 
-<div class="grid">
-  <img src="cameraman_edges.jpg"><div class="caption">Binarized Edge Image</div>
-</div>
+  <!-- ========================= Part 2.2 ========================= -->
+  <section id="part-22">
+    <h2>Part 2.2: Hybrid Images</h2>
 
-<p><strong>Justification:</strong> I selected a threshold that balanced finding true edges (e.g., outline of cameraman) while suppressing noise. Lower thresholds produced too many noisy edges, while higher thresholds removed real structure.</p>
+    <h3>Final Examples</h3>
+    <div class="grid">
+      <figure><img src="./media/derek.jpg" alt="Derek" /><figcaption>Derek</figcaption></figure>
+      <figure><img src="./media/nutmeg.jpg" alt="Nutmeg" /><figcaption>Nutmeg</figcaption></figure>
+      <figure><img src="./media/hybrid_derek_nutmeg.jpg" alt="Hybrid Derek/Nutmeg" /><figcaption>Hybrid Derek + Nutmeg</figcaption></figure>
+    </div>
 
-<h3>1.3 Derivative of Gaussian (DoG)</h3>
-<p>I built Gaussian filters using <code>cv2.getGaussianKernel</code> and created DoG filters. I applied both Gaussian smoothing and DoG filtering to the cameraman image, then compared results to the finite difference method.</p>
+    <div class="grid">
+      <figure><img src="./media/curl1.jpg" alt="Curl 1" /><figcaption>curl1</figcaption></figure>
+      <figure><img src="./media/curl2.jpg" alt="Curl 2" /><figcaption>curl2</figcaption></figure>
+      <figure><img src="./media/hybrid_curl1_curl2.jpg" alt="Hybrid Curl" /><figcaption>Hybrid curl1 + curl2</figcaption></figure>
+    </div>
 
-<div class="grid">
-  <img src="gaussian_filter.jpg"><div class="caption">Gaussian Filter</div>
-  <img src="dog_filter.jpg"><div class="caption">DoG Filter</div>
-</div>
+    <div class="grid">
+      <figure><img src="./media/curry3.jpg" alt="Curry" /><figcaption>curry3</figcaption></figure>
+      <figure><img src="./media/lebron4.jpg" alt="LeBron" /><figcaption>lebron4</figcaption></figure>
+      <figure><img src="./media/hybrid_curry_lebron.jpg" alt="Hybrid Curry/LeBron" /><figcaption>Hybrid curry3 + lebron4</figcaption></figure>
+    </div>
 
-<div class="grid">
-  <img src="cameraman_gaussian.jpg"><div class="caption">Cameraman with Gaussian Smoothing</div>
-  <img src="cameraman_dog.jpg"><div class="caption">Cameraman with DoG Filtering</div>
-  <img src="cameraman_fd.jpg"><div class="caption">Finite Difference Method</div>
-</div>
+    <h3>LeBron–Curry Walkthrough</h3>
+    <h4>Original</h4>
+    <div class="grid">
+      <figure><img src="./media/curry.jpg" alt="Curry Original" /><figcaption>Curry</figcaption></figure>
+      <figure><img src="./media/lebron.jpg" alt="LeBron Original" /><figcaption>LeBron</figcaption></figure>
+    </div>
 
-<p><strong>Comparison:</strong> DoG produces smoother and less noisy edges than finite differences. Gaussian smoothing before differencing suppresses noise while keeping important structures intact.</p>
+    <h4>Aligned Gray Images</h4>
+    <div class="grid">
+      <figure><img src="./media/curry_aligned_gray.jpg" alt="Curry aligned gray" /><figcaption>Curry (aligned gray)</figcaption></figure>
+      <figure><img src="./media/lebron_aligned_gray.jpg" alt="LeBron aligned gray" /><figcaption>LeBron (aligned gray)</figcaption></figure>
+    </div>
 
-<hr>
+    <h4>Filtered Images</h4>
+    <div class="grid">
+      <figure><img src="./media/curry_low_pass.jpg" alt="Curry low pass" /><figcaption>Curry Low Pass</figcaption></figure>
+      <figure><img src="./media/lebron_high_pass.jpg" alt="LeBron high pass" /><figcaption>LeBron High Pass</figcaption></figure>
+    </div>
 
-<h2>Part 2: Applications</h2>
+    <p class="small"><strong>Cutoff frequency choice</strong>: Curry Low Pass &rarr; sigma = 10 (kernel size 20); LeBron High Pass &rarr; sigma = 2 (kernel size 7)</p>
 
-<h3>2.1 Image Sharpening</h3>
-<p>I implemented an unsharp mask filter: blur the image, subtract to get high frequencies, then add scaled high frequencies back to the original. This enhances edges and textures.</p>
+    <h4>FFT Images</h4>
+    <div class="grid">
+      <figure><img src="./media/fft_curry.jpg" alt="FFT Curry" /><figcaption>FFT Curry</figcaption></figure>
+      <figure><img src="./media/fft_lebron.jpg" alt="FFT LeBron" /><figcaption>FFT LeBron</figcaption></figure>
+      <figure><img src="./media/fft_low_pass_curry.jpg" alt="FFT Low Pass Curry" /><figcaption>FFT Low-Pass Curry</figcaption></figure>
+      <figure><img src="./media/fft_high_pass_lebron.jpg" alt="FFT High Pass LeBron" /><figcaption>FFT High-Pass LeBron</figcaption></figure>
+      <figure><img src="./media/fft_l_high_pass.jpg" alt="FFT L High Pass" /><figcaption>fft_l_high_pass.jpg</figcaption></figure>
+      <figure><img src="./media/fft_hybrid_curry_lebron.jpg" alt="FFT Hybrid" /><figcaption>FFT Hybrid</figcaption></figure>
+    </div>
 
-<div class="grid">
-  <img src="taj_blurred.jpg"><div class="caption">Blurred Taj Mahal</div>
-  <img src="taj_highfreq.jpg"><div class="caption">High-Frequency Taj Mahal</div>
-  <img src="taj_sharpened.jpg"><div class="caption">Sharpened Taj Mahal</div>
-</div>
+    <h4>Final Image</h4>
+    <figure>
+      <img src="./media/hybrid_curry_lebron.jpg" alt="Hybrid Curry LeBron final" />
+      <figcaption>Final Hybrid (Curry + LeBron)</figcaption>
+    </figure>
+  </section>
 
-<div class="grid">
-  <img src="mayer_blurred.jpg"><div class="caption">Blurred John Mayer</div>
-  <img src="mayer_highfreq.jpg"><div class="caption">High-Frequency Mayer</div>
-  <img src="mayer_sharpened.jpg"><div class="caption">Sharpened Mayer</div>
-</div>
+  <!-- ========================= Part 2.3 + 2.4 ========================= -->
+  <section id="part-23-24">
+    <h2>Part 2.3 + 2.4: Gaussian & Laplacian Stacks + Multiresolution Blending</h2>
 
-<p><strong>Effect of Sharpening Amount:</strong> Increasing the scale exaggerates edges but can cause halos. Moderate scaling produces natural sharpness; too high looks artificial.</p>
+    <!-- Oraple -->
+    <h3>The “Oraple” (Apple + Orange)</h3>
+    <h4>Original Images</h4>
+    <div class="grid">
+      <figure><img src="./media/apple.jpg" alt="apple" /><figcaption>apple.jpg</figcaption></figure>
+      <figure><img src="./media/orange.jpg" alt="orange" /><figcaption>orange.jpg</figcaption></figure>
+    </div>
 
-<h3>2.2 Hybrid Images</h3>
-<p>I created three hybrid images:</p>
-<ul>
-  <li><strong>Derek + Nutmeg</strong>: originals + final hybrid only.</li>
-  <li><strong>Curry + LeBron</strong>: full process (alignment, Fourier transforms, filtering, cutoff choice, final hybrid).</li>
-  <li><strong>Curl Hybrid</strong>: combining top and bottom halves of a curl image.</li>
-</ul>
+    <h4>Apple Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/apple_gaussian_0.jpg" alt="apple_gaussian_0" /><figcaption>apple_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/apple_gaussian_1.jpg" alt="apple_gaussian_1" /><figcaption>apple_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/apple_gaussian_2.jpg" alt="apple_gaussian_2" /><figcaption>apple_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/apple_gaussian_3.jpg" alt="apple_gaussian_3" /><figcaption>apple_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/apple_gaussian_4.jpg" alt="apple_gaussian_4" /><figcaption>apple_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/apple_gaussian_5.jpg" alt="apple_gaussian_5" /><figcaption>apple_gaussian_5.jpg</figcaption></figure>
+    </div>
 
-<h4>Derek + Nutmeg</h4>
-<div class="grid">
-  <img src="derek.jpg"><img src="nutmeg.jpg"><img src="derek_nutmeg_hybrid.jpg">
-</div>
+    <h4>Orange Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/orange_gaussian_0.jpg" alt="orange_gaussian_0" /><figcaption>orange_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/orange_gaussian_1.jpg" alt="orange_gaussian_1" /><figcaption>orange_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/orange_gaussian_2.jpg" alt="orange_gaussian_2" /><figcaption>orange_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/orange_gaussian_3.jpg" alt="orange_gaussian_3" /><figcaption>orange_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/orange_gaussian_4.jpg" alt="orange_gaussian_4" /><figcaption>orange_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/orange_gaussian_5.jpg" alt="orange_gaussian_5" /><figcaption>orange_gaussian_5.jpg</figcaption></figure>
+    </div>
 
-<h4>Curry + LeBron</h4>
-<div class="grid">
-  <img src="curry.jpg"><div class="caption">Original Curry</div>
-  <img src="lebron.jpg"><div class="caption">Original LeBron</div>
-</div>
-<div class="grid">
-  <img src="curry_aligned.jpg"><div class="caption">Aligned Curry</div>
-  <img src="lebron_aligned.jpg"><div class="caption">Aligned LeBron</div>
-</div>
-<div class="grid">
-  <img src="fft_curry.jpg"><div class="caption">FFT of Curry</div>
-  <img src="fft_lebron.jpg"><div class="caption">FFT of LeBron</div>
-</div>
-<div class="grid">
-  <img src="curry_filtered.jpg"><div class="caption">Curry (Low-pass)</div>
-  <img src="lebron_filtered.jpg"><div class="caption">LeBron (High-pass)</div>
-</div>
+    <h4>Apple Laplacian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/apple_laplacian_0.jpg" alt="apple_laplacian_0" /><figcaption>apple_laplacian_0.jpg</figcaption></figure>
+      <figure><img src="./media/apple_laplacian_1.jpg" alt="apple_laplacian_1" /><figcaption>apple_laplacian_1.jpg</figcaption></figure>
+      <figure><img src="./media/apple_laplacian_2.jpg" alt="apple_laplacian_2" /><figcaption>apple_laplacian_2.jpg</figcaption></figure>
+      <figure><img src="./media/apple_laplacian_3.jpg" alt="apple_laplacian_3" /><figcaption>apple_laplacian_3.jpg</figcaption></figure>
+      <figure><img src="./media/apple_laplacian_4.jpg" alt="apple_laplacian_4" /><figcaption>apple_laplacian_4.jpg</figcaption></figure>
+      <figure><img src="./media/apple_laplacian_5.jpg" alt="apple_laplacian_5" /><figcaption>apple_laplacian_5.jpg</figcaption></figure>
+    </div>
 
-<p><strong>Cutoff Frequency Choice:</strong> I used a cutoff of 15 pixels in the Fourier domain. This preserved Curry’s low-frequency structure while retaining LeBron’s high-frequency edges. Close-up, LeBron dominates; from afar, Curry appears.</p>
+    <h4>Orange Laplacian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/orange_laplacian_0.jpg" alt="orange_laplacian_0" /><figcaption>orange_laplacian_0.jpg</figcaption></figure>
+      <figure><img src="./media/orange_laplacian_1.jpg" alt="orange_laplacian_1" /><figcaption>orange_laplacian_1.jpg</figcaption></figure>
+      <figure><img src="./media/orange_laplacian_2.jpg" alt="orange_laplacian_2" /><figcaption>orange_laplacian_2.jpg</figcaption></figure>
+      <figure><img src="./media/orange_laplacian_3.jpg" alt="orange_laplacian_3" /><figcaption>orange_laplacian_3.jpg</figcaption></figure>
+      <figure><img src="./media/orange_laplacian_4.jpg" alt="orange_laplacian_4" /><figcaption>orange_laplacian_4.jpg</figcaption></figure>
+      <figure><img src="./media/orange_laplacian_5.jpg" alt="orange_laplacian_5" /><figcaption>orange_laplacian_5.jpg</figcaption></figure>
+    </div>
 
-<div class="grid">
-  <img src="lebron_curry_hybrid.jpg"><div class="caption">Final Hybrid Curry + LeBron</div>
-</div>
+    <h4>Simple Half Mask</h4>
+    <figure>
+      <img src="./media/apple_half_mask.jpg" alt="apple_half_mask" />
+      <figcaption>apple_half_mask.jpg</figcaption>
+    </figure>
 
-<h4>Curl Hybrid</h4>
-<div class="grid">
-  <img src="curl_top.jpg"><div class="caption">Top Part of Curl</div>
-  <img src="curl_bottom.jpg"><div class="caption">Bottom Part of Curl</div>
-  <img src="curl_hybrid.jpg"><div class="caption">Hybrid Curl</div>
-</div>
+    <h4>Simple Half Mask Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/half_mask_gaussian_0.jpg" alt="half_mask_gaussian_0" /><figcaption>half_mask_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/half_mask_gaussian_1.jpg" alt="half_mask_gaussian_1" /><figcaption>half_mask_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/half_mask_gaussian_2.jpg" alt="half_mask_gaussian_2" /><figcaption>half_mask_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/half_mask_gaussian_3.jpg" alt="half_mask_gaussian_3" /><figcaption>half_mask_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/half_mask_gaussian_4.jpg" alt="half_mask_gaussian_4" /><figcaption>half_mask_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/half_mask_gaussian_5.jpg" alt="half_mask_gaussian_5" /><figcaption>half_mask_gaussian_5.jpg</figcaption></figure>
+    </div>
 
-<h3>2.3 Gaussian and Laplacian Stacks</h3>
-<p>Below, I show the entire pipeline row by row: Gaussian stacks, Laplacian stacks, mask stacks, masked Laplacians, blended stacks, and final outputs for three examples.</p>
+    <h4>Apple Laplacian Stack × Simple Half Mask Gaussian Stack</h4>
+    <div class="grid">
+      <figure><img src="./media/apple_half_masked_stack_0.jpg" alt="apple_half_masked_stack_0" /><figcaption>apple_half_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/apple_half_masked_stack_1.jpg" alt="apple_half_masked_stack_1" /><figcaption>apple_half_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/apple_half_masked_stack_2.jpg" alt="apple_half_masked_stack_2" /><figcaption>apple_half_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/apple_half_masked_stack_3.jpg" alt="apple_half_masked_stack_3" /><figcaption>apple_half_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/apple_half_masked_stack_4.jpg" alt="apple_half_masked_stack_4" /><figcaption>apple_half_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/apple_half_masked_stack_5.jpg" alt="apple_half_masked_stack_5" /><figcaption>apple_half_masked_stack_5.jpg</figcaption></figure>
+    </div>
 
-<h4>Example 1: Apple + Orange</h4>
-<div class="grid"><img src="apple.jpg"><img src="orange.jpg"></div>
-<p class="caption">Original Images</p>
-<div class="grid"><img src="apple_gaussian0.jpg"><img src="apple_gaussian1.jpg"><img src="apple_gaussian2.jpg"><img src="apple_gaussian3.jpg"><img src="apple_gaussian4.jpg"><img src="apple_gaussian5.jpg"></div>
-<p class="caption">Apple Gaussian Stack</p>
-<div class="grid"><img src="orange_gaussian0.jpg"><img src="orange_gaussian1.jpg"><img src="orange_gaussian2.jpg"><img src="orange_gaussian3.jpg"><img src="orange_gaussian4.jpg"><img src="orange_gaussian5.jpg"></div>
-<p class="caption">Orange Gaussian Stack</p>
-<div class="grid"><img src="apple_laplacian0.jpg"><img src="apple_laplacian1.jpg"><img src="apple_laplacian2.jpg"><img src="apple_laplacian3.jpg"><img src="apple_laplacian4.jpg"><img src="apple_laplacian5.jpg"></div>
-<p class="caption">Apple Laplacian Stack</p>
-<div class="grid"><img src="orange_laplacian0.jpg"><img src="orange_laplacian1.jpg"><img src="orange_laplacian2.jpg"><img src="orange_laplacian3.jpg"><img src="orange_laplacian4.jpg"><img src="orange_laplacian5.jpg"></div>
-<p class="caption">Orange Laplacian Stack</p>
-<div class="grid"><img src="mask_stack0.jpg"><img src="mask_stack1.jpg"><img src="mask_stack2.jpg"><img src="mask_stack3.jpg"><img src="mask_stack4.jpg"><img src="mask_stack5.jpg"></div>
-<p class="caption">Mask Stack</p>
-<div class="grid"><img src="apple_masked0.jpg"><img src="apple_masked1.jpg"><img src="apple_masked2.jpg"><img src="apple_masked3.jpg"><img src="apple_masked4.jpg"><img src="apple_masked5.jpg"></div>
-<p class="caption">Masked Apple Laplacians</p>
-<div class="grid"><img src="orange_masked0.jpg"><img src="orange_masked1.jpg"><img src="orange_masked2.jpg"><img src="orange_masked3.jpg"><img src="orange_masked4.jpg"><img src="orange_masked5.jpg"></div>
-<p class="caption">Masked Orange Laplacians</p>
-<div class="grid"><img src="apple_orange_blended0.jpg"><img src="apple_orange_blended1.jpg"><img src="apple_orange_blended2.jpg"><img src="apple_orange_blended3.jpg"><img src="apple_orange_blended4.jpg"><img src="apple_orange_blended5.jpg"></div>
-<p class="caption">Blended Stack</p>
-<div class="grid"><img src="apple_orange_final.jpg"></div>
-<p class="caption">Final Blended Apple + Orange</p>
+    <h4>Orange Laplacian Stack × (1 − Simple Half Mask Gaussian Stack)</h4>
+    <div class="grid">
+      <figure><img src="./media/orange_half_masked_stack_0.jpg" alt="orange_half_masked_stack_0" /><figcaption>orange_half_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/orange_half_masked_stack_1.jpg" alt="orange_half_masked_stack_1" /><figcaption>orange_half_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/orange_half_masked_stack_2.jpg" alt="orange_half_masked_stack_2" /><figcaption>orange_half_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/orange_half_masked_stack_3.jpg" alt="orange_half_masked_stack_3" /><figcaption>orange_half_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/orange_half_masked_stack_4.jpg" alt="orange_half_masked_stack_4" /><figcaption>orange_half_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/orange_half_masked_stack_5.jpg" alt="orange_half_masked_stack_5" /><figcaption>orange_half_masked_stack_5.jpg</figcaption></figure>
+    </div>
 
-<h4>Example 2: Galaxy + Eye</h4>
-<!-- Same structure with galaxy/eye images -->
+    <h4>Apple–Orange Combined Stack (Simple Mask)</h4>
+    <div class="grid">
+      <figure><img src="./media/apple_orange_half_masked_stack_0.jpg" alt="apple_orange_half_masked_stack_0" /><figcaption>apple_orange_half_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_half_masked_stack_1.jpg" alt="apple_orange_half_masked_stack_1" /><figcaption>apple_orange_half_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_half_masked_stack_2.jpg" alt="apple_orange_half_masked_stack_2" /><figcaption>apple_orange_half_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_half_masked_stack_3.jpg" alt="apple_orange_half_masked_stack_3" /><figcaption>apple_orange_half_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_half_masked_stack_4.jpg" alt="apple_orange_half_masked_stack_4" /><figcaption>apple_orange_half_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_half_masked_stack_5.jpg" alt="apple_orange_half_masked_stack_5" /><figcaption>apple_orange_half_masked_stack_5.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_half_masked_stack_6.jpg" alt="apple_orange_half_masked_stack_6" /><figcaption>apple_orange_half_masked_stack_6.jpg</figcaption></figure>
+    </div>
 
-<h4>Example 3: Moon + Sun</h4>
-<!-- Same structure with moon/sun images -->
+    <h4>Final Blended Image (Simple)</h4>
+    <figure>
+      <img src="./media/sum_apple_orange_simple.jpg" alt="sum_apple_orange_simple" />
+      <figcaption>sum_apple_orange_simple.jpg</figcaption>
+    </figure>
 
-<hr>
+    <h4>Smooth Window Half Mask</h4>
+    <figure>
+      <img src="./media/apple_smooth_mask.jpg" alt="apple_smooth_mask" />
+      <figcaption>apple_smooth_mask.jpg</figcaption>
+    </figure>
 
-<h2>Reflection</h2>
-<p>This project demonstrated the power of frequency domain thinking. From implementing basic convolutions to blending with pyramids, I saw how mathematical tools create perceptually meaningful effects. The hybrid images especially highlighted how low and high frequencies dominate at different scales of viewing.</p>
+    <h4>Smooth Half Mask Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/smooth_mask_gaussian_0.jpg" alt="smooth_mask_gaussian_0" /><figcaption>smooth_mask_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/smooth_mask_gaussian_1.jpg" alt="smooth_mask_gaussian_1" /><figcaption>smooth_mask_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/smooth_mask_gaussian_2.jpg" alt="smooth_mask_gaussian_2" /><figcaption>smooth_mask_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/smooth_mask_gaussian_3.jpg" alt="smooth_mask_gaussian_3" /><figcaption>smooth_mask_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/smooth_mask_gaussian_4.jpg" alt="smooth_mask_gaussian_4" /><figcaption>smooth_mask_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/smooth_mask_gaussian_5.jpg" alt="smooth_mask_gaussian_5" /><figcaption>smooth_mask_gaussian_5.jpg</figcaption></figure>
+    </div>
 
+    <h4>Apple Laplacian × Smooth Half Mask Gaussian</h4>
+    <div class="grid">
+      <figure><img src="./media/apple_smooth_masked_stack_0.jpg" alt="apple_smooth_masked_stack_0" /><figcaption>apple_smooth_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/apple_smooth_masked_stack_1.jpg" alt="apple_smooth_masked_stack_1" /><figcaption>apple_smooth_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/apple_smooth_masked_stack_2.jpg" alt="apple_smooth_masked_stack_2" /><figcaption>apple_smooth_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/apple_smooth_masked_stack_3.jpg" alt="apple_smooth_masked_stack_3" /><figcaption>apple_smooth_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/apple_smooth_masked_stack_4.jpg" alt="apple_smooth_masked_stack_4" /><figcaption>apple_smooth_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/apple_smooth_masked_stack_5.jpg" alt="apple_smooth_masked_stack_5" /><figcaption>apple_smooth_masked_stack_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Orange Laplacian × (1 − Smooth Half Mask Gaussian)</h4>
+    <div class="grid">
+      <figure><img src="./media/orange_smooth_masked_stack_0.jpg" alt="orange_smooth_masked_stack_0" /><figcaption>orange_smooth_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/orange_smooth_masked_stack_1.jpg" alt="orange_smooth_masked_stack_1" /><figcaption>orange_smooth_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/orange_smooth_masked_stack_2.jpg" alt="orange_smooth_masked_stack_2" /><figcaption>orange_smooth_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/orange_smooth_masked_stack_3.jpg" alt="orange_smooth_masked_stack_3" /><figcaption>orange_smooth_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/orange_smooth_masked_stack_4.jpg" alt="orange_smooth_masked_stack_4" /><figcaption>orange_smooth_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/orange_smooth_masked_stack_5.jpg" alt="orange_smooth_masked_stack_5" /><figcaption>orange_smooth_masked_stack_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Apple–Orange Combined Stack (Smooth Half Mask)</h4>
+    <div class="grid">
+      <figure><img src="./media/apple_orange_smooth_masked_stack_0.jpg" alt="apple_orange_smooth_masked_stack_0" /><figcaption>apple_orange_smooth_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_smooth_masked_stack_1.jpg" alt="apple_orange_smooth_masked_stack_1" /><figcaption>apple_orange_smooth_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_smooth_masked_stack_2.jpg" alt="apple_orange_smooth_masked_stack_2" /><figcaption>apple_orange_smooth_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_smooth_masked_stack_3.jpg" alt="apple_orange_smooth_masked_stack_3" /><figcaption>apple_orange_smooth_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_smooth_masked_stack_4.jpg" alt="apple_orange_smooth_masked_stack_4" /><figcaption>apple_orange_smooth_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_smooth_masked_stack_5.jpg" alt="apple_orange_smooth_masked_stack_5" /><figcaption>apple_orange_smooth_masked_stack_5.jpg</figcaption></figure>
+      <figure><img src="./media/apple_orange_smooth_masked_stack_6.jpg" alt="apple_orange_smooth_masked_stack_6" /><figcaption>apple_orange_smooth_masked_stack_6.jpg</figcaption></figure>
+    </div>
+
+    <h4>Final Blended Image (Smooth)</h4>
+    <figure>
+      <img src="./media/sum_apple_orange_smooth.jpg" alt="sum_apple_orange_smooth" />
+      <figcaption>sum_apple_orange_smooth.jpg</figcaption>
+    </figure>
+
+    <!-- Galaxy Eye -->
+    <h3>Galaxy Eye (Galaxy + Eye)</h3>
+
+    <h4>Original Images</h4>
+    <div class="grid">
+      <figure><img src="./media/galaxy.jpg" alt="galaxy" /><figcaption>galaxy.jpg</figcaption></figure>
+      <figure><img src="./media/eye.jpg" alt="eye" /><figcaption>eye.jpg</figcaption></figure>
+    </div>
+
+    <h4>Galaxy Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/galaxy_gaussian_0.jpg" alt="galaxy_gaussian_0" /><figcaption>galaxy_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_gaussian_1.jpg" alt="galaxy_gaussian_1" /><figcaption>galaxy_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_gaussian_2.jpg" alt="galaxy_gaussian_2" /><figcaption>galaxy_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_gaussian_3.jpg" alt="galaxy_gaussian_3" /><figcaption>galaxy_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_gaussian_4.jpg" alt="galaxy_gaussian_4" /><figcaption>galaxy_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_gaussian_5.jpg" alt="galaxy_gaussian_5" /><figcaption>galaxy_gaussian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Eye Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/eye_gaussian_0.jpg" alt="eye_gaussian_0" /><figcaption>eye_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/eye_gaussian_1.jpg" alt="eye_gaussian_1" /><figcaption>eye_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/eye_gaussian_2.jpg" alt="eye_gaussian_2" /><figcaption>eye_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/eye_gaussian_3.jpg" alt="eye_gaussian_3" /><figcaption>eye_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/eye_gaussian_4.jpg" alt="eye_gaussian_4" /><figcaption>eye_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/eye_gaussian_5.jpg" alt="eye_gaussian_5" /><figcaption>eye_gaussian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Galaxy Laplacian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/galaxy_laplacian_0.jpg" alt="galaxy_laplacian_0" /><figcaption>galaxy_laplacian_0.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_laplacian_1.jpg" alt="galaxy_laplacian_1" /><figcaption>galaxy_laplacian_1.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_laplacian_2.jpg" alt="galaxy_laplacian_2" /><figcaption>galaxy_laplacian_2.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_laplacian_3.jpg" alt="galaxy_laplacian_3" /><figcaption>galaxy_laplacian_3.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_laplacian_4.jpg" alt="galaxy_laplacian_4" /><figcaption>galaxy_laplacian_4.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_laplacian_5.jpg" alt="galaxy_laplacian_5" /><figcaption>galaxy_laplacian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Eye Laplacian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/eye_laplacian_0.jpg" alt="eye_laplacian_0" /><figcaption>eye_laplacian_0.jpg</figcaption></figure>
+      <figure><img src="./media/eye_laplacian_1.jpg" alt="eye_laplacian_1" /><figcaption>eye_laplacian_1.jpg</figcaption></figure>
+      <figure><img src="./media/eye_laplacian_2.jpg" alt="eye_laplacian_2" /><figcaption>eye_laplacian_2.jpg</figcaption></figure>
+      <figure><img src="./media/eye_laplacian_3.jpg" alt="eye_laplacian_3" /><figcaption>eye_laplacian_3.jpg</figcaption></figure>
+      <figure><img src="./media/eye_laplacian_4.jpg" alt="eye_laplacian_4" /><figcaption>eye_laplacian_4.jpg</figcaption></figure>
+      <figure><img src="./media/eye_laplacian_5.jpg" alt="eye_laplacian_5" /><figcaption>eye_laplacian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Radial Mask</h4>
+    <figure>
+      <img src="./media/moon_smooth_half_mask.jpg" alt="moon_smooth_half_mask (radial mask)" />
+      <figcaption>moon_smooth_half_mask.jpg (radial mask)</figcaption>
+    </figure>
+
+    <h4>Smooth Radial Mask Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/radial_mask_gaussian_0.jpg" alt="radial_mask_gaussian_0" /><figcaption>radial_mask_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/radial_mask_gaussian_1.jpg" alt="radial_mask_gaussian_1" /><figcaption>radial_mask_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/radial_mask_gaussian_2.jpg" alt="radial_mask_gaussian_2" /><figcaption>radial_mask_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/radial_mask_gaussian_3.jpg" alt="radial_mask_gaussian_3" /><figcaption>radial_mask_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/radial_mask_gaussian_4.jpg" alt="radial_mask_gaussian_4" /><figcaption>radial_mask_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/radial_mask_gaussian_5.jpg" alt="radial_mask_gaussian_5" /><figcaption>radial_mask_gaussian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Galaxy Laplacian × Radial Gaussian Stack</h4>
+    <div class="grid">
+      <figure><img src="./media/galaxy_radial_masked_stack_0.jpg" alt="galaxy_radial_masked_stack_0" /><figcaption>galaxy_radial_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_radial_masked_stack_1.jpg" alt="galaxy_radial_masked_stack_1" /><figcaption>galaxy_radial_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_radial_masked_stack_2.jpg" alt="galaxy_radial_masked_stack_2" /><figcaption>galaxy_radial_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_radial_masked_stack_3.jpg" alt="galaxy_radial_masked_stack_3" /><figcaption>galaxy_radial_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_radial_masked_stack_4.jpg" alt="galaxy_radial_masked_stack_4" /><figcaption>galaxy_radial_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_radial_masked_stack_5.jpg" alt="galaxy_radial_masked_stack_5" /><figcaption>galaxy_radial_masked_stack_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Eye Laplacian × (1 − Radial Mask Gaussian Stack)</h4>
+    <div class="grid">
+      <figure><img src="./media/eye_radial_masked_stack_0.jpg" alt="eye_radial_masked_stack_0" /><figcaption>eye_radial_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/eye_radial_masked_stack_1.jpg" alt="eye_radial_masked_stack_1" /><figcaption>eye_radial_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/eye_radial_masked_stack_2.jpg" alt="eye_radial_masked_stack_2" /><figcaption>eye_radial_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/eye_radial_masked_stack_3.jpg" alt="eye_radial_masked_stack_3" /><figcaption>eye_radial_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/eye_radial_masked_stack_4.jpg" alt="eye_radial_masked_stack_4" /><figcaption>eye_radial_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/eye_radial_masked_stack_5.jpg" alt="eye_radial_masked_stack_5" /><figcaption>eye_radial_masked_stack_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Galaxy–Eye Combined Stack (Radial Mask)</h4>
+    <div class="grid">
+      <figure><img src="./media/galaxy_eye_sradial_masked_stack_0.jpg" alt="galaxy_eye_sradial_masked_stack_0" /><figcaption>galaxy_eye_sradial_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_eye_sradial_masked_stack_1.jpg" alt="galaxy_eye_sradial_masked_stack_1" /><figcaption>galaxy_eye_sradial_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_eye_sradial_masked_stack_2.jpg" alt="galaxy_eye_sradial_masked_stack_2" /><figcaption>galaxy_eye_sradial_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_eye_sradial_masked_stack_3.jpg" alt="galaxy_eye_sradial_masked_stack_3" /><figcaption>galaxy_eye_sradial_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_eye_sradial_masked_stack_4.jpg" alt="galaxy_eye_sradial_masked_stack_4" /><figcaption>galaxy_eye_sradial_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/galaxy_eye_sradial_masked_stack_5.jpg" alt="galaxy_eye_sradial_masked_stack_5" /><figcaption>galaxy_eye_sradial_masked_stack_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Final Blended Image</h4>
+    <figure>
+      <img src="./media/sum_galaxy_eye.jpg" alt="sum_galaxy_eye" />
+      <figcaption>sum_galaxy_eye.jpg</figcaption>
+    </figure>
+
+    <!-- Moon Sun -->
+    <h3>Moon Sun (Moon + Sun)</h3>
+
+    <h4>Original Images</h4>
+    <div class="grid">
+      <figure><img src="./media/moon.jpg" alt="moon" /><figcaption>moon.jpg</figcaption></figure>
+      <figure><img src="./media/sun.jpg" alt="sun" /><figcaption>sun.jpg</figcaption></figure>
+    </div>
+
+    <h4>Moon Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/moon_gaussian_0.jpg" alt="moon_gaussian_0" /><figcaption>moon_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/moon_gaussian_1.jpg" alt="moon_gaussian_1" /><figcaption>moon_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/moon_gaussian_2.jpg" alt="moon_gaussian_2" /><figcaption>moon_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/moon_gaussian_3.jpg" alt="moon_gaussian_3" /><figcaption>moon_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/moon_gaussian_4.jpg" alt="moon_gaussian_4" /><figcaption>moon_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/moon_gaussian_5.jpg" alt="moon_gaussian_5" /><figcaption>moon_gaussian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Sun Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/sun_gaussian_0.jpg" alt="sun_gaussian_0" /><figcaption>sun_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/sun_gaussian_1.jpg" alt="sun_gaussian_1" /><figcaption>sun_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/sun_gaussian_2.jpg" alt="sun_gaussian_2" /><figcaption>sun_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/sun_gaussian_3.jpg" alt="sun_gaussian_3" /><figcaption>sun_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/sun_gaussian_4.jpg" alt="sun_gaussian_4" /><figcaption>sun_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/sun_gaussian_5.jpg" alt="sun_gaussian_5" /><figcaption>sun_gaussian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Moon Laplacian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/moon_laplacian_0.jpg" alt="moon_laplacian_0" /><figcaption>moon_laplacian_0.jpg</figcaption></figure>
+      <figure><img src="./media/moon_laplacian_1.jpg" alt="moon_laplacian_1" /><figcaption>moon_laplacian_1.jpg</figcaption></figure>
+      <figure><img src="./media/moon_laplacian_2.jpg" alt="moon_laplacian_2" /><figcaption>moon_laplacian_2.jpg</figcaption></figure>
+      <figure><img src="./media/moon_laplacian_3.jpg" alt="moon_laplacian_3" /><figcaption>moon_laplacian_3.jpg</figcaption></figure>
+      <figure><img src="./media/moon_laplacian_4.jpg" alt="moon_laplacian_4" /><figcaption>moon_laplacian_4.jpg</figcaption></figure>
+      <figure><img src="./media/moon_laplacian_5.jpg" alt="moon_laplacian_5" /><figcaption>moon_laplacian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Sun Laplacian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/sun_laplacian_0.jpg" alt="sun_laplacian_0" /><figcaption>sun_laplacian_0.jpg</figcaption></figure>
+      <figure><img src="./media/sun_laplacian_1.jpg" alt="sun_laplacian_1" /><figcaption>sun_laplacian_1.jpg</figcaption></figure>
+      <figure><img src="./media/sun_laplacian_2.jpg" alt="sun_laplacian_2" /><figcaption>sun_laplacian_2.jpg</figcaption></figure>
+      <figure><img src="./media/sun_laplacian_3.jpg" alt="sun_laplacian_3" /><figcaption>sun_laplacian_3.jpg</figcaption></figure>
+      <figure><img src="./media/sun_laplacian_4.jpg" alt="sun_laplacian_4" /><figcaption>sun_laplacian_4.jpg</figcaption></figure>
+      <figure><img src="./media/sun_laplacian_5.jpg" alt="sun_laplacian_5" /><figcaption>sun_laplacian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Smooth Half Mask Gaussian Stack (6 Levels)</h4>
+    <div class="grid">
+      <figure><img src="./media/moon_smooth_mask_gaussian_0.jpg" alt="moon_smooth_mask_gaussian_0" /><figcaption>moon_smooth_mask_gaussian_0.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_mask_gaussian_1.jpg" alt="moon_smooth_mask_gaussian_1" /><figcaption>moon_smooth_mask_gaussian_1.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_mask_gaussian_2.jpg" alt="moon_smooth_mask_gaussian_2" /><figcaption>moon_smooth_mask_gaussian_2.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_mask_gaussian_3.jpg" alt="moon_smooth_mask_gaussian_3" /><figcaption>moon_smooth_mask_gaussian_3.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_mask_gaussian_4.jpg" alt="moon_smooth_mask_gaussian_4" /><figcaption>moon_smooth_mask_gaussian_4.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_mask_gaussian_5.jpg" alt="moon_smooth_mask_gaussian_5" /><figcaption>moon_smooth_mask_gaussian_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Moon Laplacian × Smooth Half Mask Gaussian</h4>
+    <div class="grid">
+      <figure><img src="./media/moon_smooth_masked_stack_0.jpg" alt="moon_smooth_masked_stack_0" /><figcaption>moon_smooth_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_masked_stack_1.jpg" alt="moon_smooth_masked_stack_1" /><figcaption>moon_smooth_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_masked_stack_2.jpg" alt="moon_smooth_masked_stack_2" /><figcaption>moon_smooth_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_masked_stack_3.jpg" alt="moon_smooth_masked_stack_3" /><figcaption>moon_smooth_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_masked_stack_4.jpg" alt="moon_smooth_masked_stack_4" /><figcaption>moon_smooth_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_masked_stack_5.jpg" alt="moon_smooth_masked_stack_5" /><figcaption>moon_smooth_masked_stack_5.jpg</figcaption></figure>
+      <figure><img src="./media/moon_smooth_masked_stack_6.jpg" alt="moon_smooth_masked_stack_6" /><figcaption>moon_smooth_masked_stack_6.jpg</figcaption></figure>
+    </div>
+
+    <h4>Sun Laplacian × (1 − Smooth Half Mask Gaussian)</h4>
+    <div class="grid">
+      <figure><img src="./media/sun_smooth_masked_stack_0.jpg" alt="sun_smooth_masked_stack_0" /><figcaption>sun_smooth_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/sun_smooth_masked_stack_1.jpg" alt="sun_smooth_masked_stack_1" /><figcaption>sun_smooth_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/sun_smooth_masked_stack_2.jpg" alt="sun_smooth_masked_stack_2" /><figcaption>sun_smooth_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/sun_smooth_masked_stack_3.jpg" alt="sun_smooth_masked_stack_3" /><figcaption>sun_smooth_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/sun_smooth_masked_stack_4.jpg" alt="sun_smooth_masked_stack_4" /><figcaption>sun_smooth_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/sun_smooth_masked_stack_5.jpg" alt="sun_smooth_masked_stack_5" /><figcaption>sun_smooth_masked_stack_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Moon–Sun Combined Stack (Smooth Half Mask)</h4>
+    <div class="grid">
+      <figure><img src="./media/moon_sun_smooth_masked_stack_0.jpg" alt="moon_sun_smooth_masked_stack_0" /><figcaption>moon_sun_smooth_masked_stack_0.jpg</figcaption></figure>
+      <figure><img src="./media/moon_sun_smooth_masked_stack_1.jpg" alt="moon_sun_smooth_masked_stack_1" /><figcaption>moon_sun_smooth_masked_stack_1.jpg</figcaption></figure>
+      <figure><img src="./media/moon_sun_smooth_masked_stack_2.jpg" alt="moon_sun_smooth_masked_stack_2" /><figcaption>moon_sun_smooth_masked_stack_2.jpg</figcaption></figure>
+      <figure><img src="./media/moon_sun_smooth_masked_stack_3.jpg" alt="moon_sun_smooth_masked_stack_3" /><figcaption>moon_sun_smooth_masked_stack_3.jpg</figcaption></figure>
+      <figure><img src="./media/moon_sun_smooth_masked_stack_4.jpg" alt="moon_sun_smooth_masked_stack_4" /><figcaption>moon_sun_smooth_masked_stack_4.jpg</figcaption></figure>
+      <figure><img src="./media/moon_sun_smooth_masked_stack_5.jpg" alt="moon_sun_smooth_masked_stack_5" /><figcaption>moon_sun_smooth_masked_stack_5.jpg</figcaption></figure>
+    </div>
+
+    <h4>Final Blended Image</h4>
+    <figure>
+      <img src="./media/sum_moon_sun.jpg" alt="sum_moon_sun" />
+      <figcaption>sum_moon_sun.jpg</figcaption>
+    </figure>
+
+  </section>
+
+  <footer class="small" style="margin-top:40px; color:#777;">
+    <p>End of report.</p>
+  </footer>
 </body>
 </html>
