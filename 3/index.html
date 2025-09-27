@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>CS180 Project 3: Frequencies and Blending</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.6; margin: 40px; max-width: 1200px; }
+    h1, h2, h3, h4 { color: #333; }
+    img { max-width: 100%; height: auto; margin: 5px 0; border: 1px solid #ddd; }
+    .grid { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+    .grid img { flex: 1 1 30%; }
+    .caption { font-size: 0.9em; color: #555; text-align: center; margin-bottom: 20px; }
+    pre { background: #f7f7f7; padding: 10px; overflow-x: auto; border: 1px solid #ccc; }
+  </style>
+</head>
+<body>
+
+<h1>CS180 Project 3: Frequencies and Blending</h1>
+<p><strong>Name:</strong> Maanit Sharma</p>
+
+<p><strong>Most important thing I learned:</strong> The project taught me how to use frequency analysis for creative and technical image manipulation. Convolution, Gaussian smoothing, and Laplacian pyramids aren’t just theoretical — they directly enable hybrid images, sharpening, and blending. It showed me the power of mathematical tools in visual perception.</p>
+
+<hr>
+
+<h2>Part 1: Filters and Edges</h2>
+
+<h3>1.1 Convolutions from Scratch</h3>
+<p>I implemented convolution in two ways: using 4 loops and using 2 loops. Both methods pad the image, flip the kernel, and compute the output. The 4-loop implementation iterates over each pixel and each kernel element, while the 2-loop implementation leverages <code>np.sum</code> to collapse the inner loops. Finally, I compared my results to <code>scipy.signal.convolve2d</code>.</p>
+
+<pre>
+def convolve_4loops(im, kernel):
+    im = np.asarray(im, dtype=float)
+    kernel = np.asarray(kernel, dtype=float)
+    flipped_k = np.flip(kernel)
+    im_h, im_w = im.shape
+    k_h, k_w = flipped_k.shape
+    pad_h, pad_w = k_h - 1, k_w - 1
+    im_padded = np.pad(im, ((pad_h, pad_h), (pad_w, pad_w)), 
+                       mode='constant', constant_values=0)
+    out_h, out_w = im_h + k_h - 1, im_w + k_w - 1
+    out = np.zeros((out_h, out_w))
+    for i in range(out_h):
+        for j in range(out_w):
+            for r in range(k_h):
+                for c in range(k_w):
+                    out[i, j] += im_padded[i + r, j + c] * flipped_k[r, c]
+    return out
+</pre>
+
+<pre>
+def convolve_2loops(im, kernel):
+    im = np.asarray(im, dtype=float)
+    kernel = np.asarray(kernel, dtype=float)
+    flipped_k = np.flip(kernel)
+    im_h, im_w = im.shape
+    k_h, k_w = flipped_k.shape
+    pad_h, pad_w = k_h - 1, k_w - 1
+    im_padded = np.pad(im, ((pad_h, pad_h), (pad_w, pad_w)), 
+                       mode='constant', constant_values=0)
+    out_h, out_w = im_h + k_h - 1, im_w + k_w - 1
+    out = np.zeros((out_h, out_w))
+    for i in range(out_h):
+        for j in range(out_w):
+            out[i, j] = np.sum(im_padded[i:i+k_h, j:j+k_w] * flipped_k)
+    return out
+</pre>
+
+<p><strong>Comparison with <code>scipy.signal.convolve2d</code>:</strong> My outputs match exactly. Runtime is slower for my versions (especially 4-loop) due to explicit Python iteration. <code>scipy</code> uses optimized C under the hood. For boundaries, my method zero-pads, while <code>convolve2d</code> offers multiple modes (fill, wrap, symmetric).</p>
+
+<div class="grid">
+  <img src="cameraman_dx.jpg"><div class="caption">Cameraman convolved with dx filter</div>
+  <img src="cameraman_dy.jpg"><div class="caption">Cameraman convolved with dy filter</div>
+  <img src="scipy_convolve.jpg"><div class="caption">scipy.convolve2d result</div>
+</div>
+
+<div class="grid">
+  <img src="selfie_dx.jpg"><div class="caption">My Selfie with dx filter</div>
+  <img src="selfie_dy.jpg"><div class="caption">My Selfie with dy filter</div>
+</div>
+
+<h3>1.2 Finite Difference Operator</h3>
+<p>I applied finite difference filters <code>dx = [[1, -1]]</code> and <code>dy = [[1], [-1]]</code> to the cameraman image to compute partial derivatives. I then calculated the gradient magnitude image and binarized it to detect edges.</p>
+
+<div class="grid">
+  <img src="cameraman_dx.jpg"><div class="caption">Partial Derivative in x</div>
+  <img src="cameraman_dy.jpg"><div class="caption">Partial Derivative in y</div>
+  <img src="cameraman_gradmag.jpg"><div class="caption">Gradient Magnitude</div>
+</div>
+
+<div class="grid">
+  <img src="cameraman_edges.jpg"><div class="caption">Binarized Edge Image</div>
+</div>
+
+<p><strong>Justification:</strong> I selected a threshold that balanced finding true edges (e.g., outline of cameraman) while suppressing noise. Lower thresholds produced too many noisy edges, while higher thresholds removed real structure.</p>
+
+<h3>1.3 Derivative of Gaussian (DoG)</h3>
+<p>I built Gaussian filters using <code>cv2.getGaussianKernel</code> and created DoG filters. I applied both Gaussian smoothing and DoG filtering to the cameraman image, then compared results to the finite difference method.</p>
+
+<div class="grid">
+  <img src="gaussian_filter.jpg"><div class="caption">Gaussian Filter</div>
+  <img src="dog_filter.jpg"><div class="caption">DoG Filter</div>
+</div>
+
+<div class="grid">
+  <img src="cameraman_gaussian.jpg"><div class="caption">Cameraman with Gaussian Smoothing</div>
+  <img src="cameraman_dog.jpg"><div class="caption">Cameraman with DoG Filtering</div>
+  <img src="cameraman_fd.jpg"><div class="caption">Finite Difference Method</div>
+</div>
+
+<p><strong>Comparison:</strong> DoG produces smoother and less noisy edges than finite differences. Gaussian smoothing before differencing suppresses noise while keeping important structures intact.</p>
+
+<hr>
+
+<h2>Part 2: Applications</h2>
+
+<h3>2.1 Image Sharpening</h3>
+<p>I implemented an unsharp mask filter: blur the image, subtract to get high frequencies, then add scaled high frequencies back to the original. This enhances edges and textures.</p>
+
+<div class="grid">
+  <img src="taj_blurred.jpg"><div class="caption">Blurred Taj Mahal</div>
+  <img src="taj_highfreq.jpg"><div class="caption">High-Frequency Taj Mahal</div>
+  <img src="taj_sharpened.jpg"><div class="caption">Sharpened Taj Mahal</div>
+</div>
+
+<div class="grid">
+  <img src="mayer_blurred.jpg"><div class="caption">Blurred John Mayer</div>
+  <img src="mayer_highfreq.jpg"><div class="caption">High-Frequency Mayer</div>
+  <img src="mayer_sharpened.jpg"><div class="caption">Sharpened Mayer</div>
+</div>
+
+<p><strong>Effect of Sharpening Amount:</strong> Increasing the scale exaggerates edges but can cause halos. Moderate scaling produces natural sharpness; too high looks artificial.</p>
+
+<h3>2.2 Hybrid Images</h3>
+<p>I created three hybrid images:</p>
+<ul>
+  <li><strong>Derek + Nutmeg</strong>: originals + final hybrid only.</li>
+  <li><strong>Curry + LeBron</strong>: full process (alignment, Fourier transforms, filtering, cutoff choice, final hybrid).</li>
+  <li><strong>Curl Hybrid</strong>: combining top and bottom halves of a curl image.</li>
+</ul>
+
+<h4>Derek + Nutmeg</h4>
+<div class="grid">
+  <img src="derek.jpg"><img src="nutmeg.jpg"><img src="derek_nutmeg_hybrid.jpg">
+</div>
+
+<h4>Curry + LeBron</h4>
+<div class="grid">
+  <img src="curry.jpg"><div class="caption">Original Curry</div>
+  <img src="lebron.jpg"><div class="caption">Original LeBron</div>
+</div>
+<div class="grid">
+  <img src="curry_aligned.jpg"><div class="caption">Aligned Curry</div>
+  <img src="lebron_aligned.jpg"><div class="caption">Aligned LeBron</div>
+</div>
+<div class="grid">
+  <img src="fft_curry.jpg"><div class="caption">FFT of Curry</div>
+  <img src="fft_lebron.jpg"><div class="caption">FFT of LeBron</div>
+</div>
+<div class="grid">
+  <img src="curry_filtered.jpg"><div class="caption">Curry (Low-pass)</div>
+  <img src="lebron_filtered.jpg"><div class="caption">LeBron (High-pass)</div>
+</div>
+
+<p><strong>Cutoff Frequency Choice:</strong> I used a cutoff of 15 pixels in the Fourier domain. This preserved Curry’s low-frequency structure while retaining LeBron’s high-frequency edges. Close-up, LeBron dominates; from afar, Curry appears.</p>
+
+<div class="grid">
+  <img src="lebron_curry_hybrid.jpg"><div class="caption">Final Hybrid Curry + LeBron</div>
+</div>
+
+<h4>Curl Hybrid</h4>
+<div class="grid">
+  <img src="curl_top.jpg"><div class="caption">Top Part of Curl</div>
+  <img src="curl_bottom.jpg"><div class="caption">Bottom Part of Curl</div>
+  <img src="curl_hybrid.jpg"><div class="caption">Hybrid Curl</div>
+</div>
+
+<h3>2.3 Gaussian and Laplacian Stacks</h3>
+<p>Below, I show the entire pipeline row by row: Gaussian stacks, Laplacian stacks, mask stacks, masked Laplacians, blended stacks, and final outputs for three examples.</p>
+
+<h4>Example 1: Apple + Orange</h4>
+<div class="grid"><img src="apple.jpg"><img src="orange.jpg"></div>
+<p class="caption">Original Images</p>
+<div class="grid"><img src="apple_gaussian0.jpg"><img src="apple_gaussian1.jpg"><img src="apple_gaussian2.jpg"><img src="apple_gaussian3.jpg"><img src="apple_gaussian4.jpg"><img src="apple_gaussian5.jpg"></div>
+<p class="caption">Apple Gaussian Stack</p>
+<div class="grid"><img src="orange_gaussian0.jpg"><img src="orange_gaussian1.jpg"><img src="orange_gaussian2.jpg"><img src="orange_gaussian3.jpg"><img src="orange_gaussian4.jpg"><img src="orange_gaussian5.jpg"></div>
+<p class="caption">Orange Gaussian Stack</p>
+<div class="grid"><img src="apple_laplacian0.jpg"><img src="apple_laplacian1.jpg"><img src="apple_laplacian2.jpg"><img src="apple_laplacian3.jpg"><img src="apple_laplacian4.jpg"><img src="apple_laplacian5.jpg"></div>
+<p class="caption">Apple Laplacian Stack</p>
+<div class="grid"><img src="orange_laplacian0.jpg"><img src="orange_laplacian1.jpg"><img src="orange_laplacian2.jpg"><img src="orange_laplacian3.jpg"><img src="orange_laplacian4.jpg"><img src="orange_laplacian5.jpg"></div>
+<p class="caption">Orange Laplacian Stack</p>
+<div class="grid"><img src="mask_stack0.jpg"><img src="mask_stack1.jpg"><img src="mask_stack2.jpg"><img src="mask_stack3.jpg"><img src="mask_stack4.jpg"><img src="mask_stack5.jpg"></div>
+<p class="caption">Mask Stack</p>
+<div class="grid"><img src="apple_masked0.jpg"><img src="apple_masked1.jpg"><img src="apple_masked2.jpg"><img src="apple_masked3.jpg"><img src="apple_masked4.jpg"><img src="apple_masked5.jpg"></div>
+<p class="caption">Masked Apple Laplacians</p>
+<div class="grid"><img src="orange_masked0.jpg"><img src="orange_masked1.jpg"><img src="orange_masked2.jpg"><img src="orange_masked3.jpg"><img src="orange_masked4.jpg"><img src="orange_masked5.jpg"></div>
+<p class="caption">Masked Orange Laplacians</p>
+<div class="grid"><img src="apple_orange_blended0.jpg"><img src="apple_orange_blended1.jpg"><img src="apple_orange_blended2.jpg"><img src="apple_orange_blended3.jpg"><img src="apple_orange_blended4.jpg"><img src="apple_orange_blended5.jpg"></div>
+<p class="caption">Blended Stack</p>
+<div class="grid"><img src="apple_orange_final.jpg"></div>
+<p class="caption">Final Blended Apple + Orange</p>
+
+<h4>Example 2: Galaxy + Eye</h4>
+<!-- Same structure with galaxy/eye images -->
+
+<h4>Example 3: Moon + Sun</h4>
+<!-- Same structure with moon/sun images -->
+
+<hr>
+
+<h2>Reflection</h2>
+<p>This project demonstrated the power of frequency domain thinking. From implementing basic convolutions to blending with pyramids, I saw how mathematical tools create perceptually meaningful effects. The hybrid images especially highlighted how low and high frequencies dominate at different scales of viewing.</p>
+
+</body>
+</html>
