@@ -49,6 +49,35 @@
       margin: 0; padding: 10px; border: 1px dashed var(--border); border-radius: 8px;
       display: flex; flex-direction: column; align-items: center; gap: 8px;
     }
+
+    /* Back-to-home button */
+    .back-home {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      z-index: 1000; /* above sticky nav */
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #fff;
+      color: #111;
+      text-decoration: none;
+      font-size: 14px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+      transition: transform 0.06s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+    .back-home:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
+    .back-home:active { transform: translateY(0); }
+    .back-home svg { width: 16px; height: 16px; }
+    @media (max-width: 640px) {
+      .back-home { padding: 6px 10px; font-size: 13px; }
+    }
+
+
+    
     img.big { width: 420px; max-width: 100%; }
     /* Slightly reduce final hybrid images */
     img[src$="hybrid_derek_nutmeg.jpg"],
@@ -63,6 +92,16 @@
   </style>
 </head>
 <body>
+
+    <!-- Back to Home -->
+  <a class="back-home" href="../">
+    <!-- Change href to "/" or "./" if your home path differs -->
+    <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Back to Home
+  </a>
+
   <header>
     <h1>CS180 Project 2</h1>
     <p class="note">This page mirrors the outline and image tables from the project PDF. All image filenames below match the PDF tables exactly.</p>
