@@ -1,1 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Project 3 — Homographies, Warping & Mosaics</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <!-- Nice, lightweight styling -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#0b0c10; --panel:#121317; --ink:#e9eef7; --muted:#aab4c5; --accent:#7dd3fc; --green:#22c55e; --red:#ef4444;
+      --card:#161821; --ring:#1f2937;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;line-height:1.6}
+    main{max-width:1100px;margin:32px auto;padding:0 16px}
+    header{margin-bottom:20px}
+    h1{font-size:clamp(28px,5vw,40px);margin:0 0 10px}
+    h2{font-size:clamp(22px,4vw,28px);margin:32px 0 10px;border-left:4px solid var(--accent);padding-left:10px}
+    h3{font-size:clamp(18px,3vw,22px);margin:18px 0 8px}
+    p{color:var(--muted);margin:10px 0}
+    .card{background:var(--card);border:1px solid var(--ring);border-radius:14px;padding:16px;margin:14px 0}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px}
+    .pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+    figure{margin:0;background:#0f1117;border-radius:12px;border:1px solid #1b2130;overflow:hidden}
+    figure img{width:100%;height:auto;display:block}
+    figure figcaption{font-size:13px;color:#9fb0c4;padding:8px 10px;border-top:1px solid #1b2130}
+    code,kbd{background:#0f1117;color:#d4e2ff;padding:2px 6px;border-radius:6px;border:1px solid #1b2130}
+    pre{background:#0f1117;color:#d4e2ff;border:1px solid #1b2130;border-radius:12px;padding:14px;overflow:auto}
+    table{width:100%;border-collapse:collapse;border:1px solid #1b2130;border-radius:12px;overflow:hidden}
+    th,td{border-bottom:1px solid #1b2130;padding:10px 12px;text-align:right}
+    th:first-child,td:first-child{text-align:left}
+    .matrix{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;font-size:13.5px;white-space:pre}
+    .tag{display:inline-block;font-size:12px;color:#0b1220;background:#bde5ff;border:0;border-radius:999px;padding:2px 8px;margin-left:6px}
+    .legend{display:flex;gap:12px;align-items:center;font-size:13px;color:#9fb0c4;margin-top:6px}
+    .dot{width:10px;height:10px;border-radius:50%}
+    .green{background:var(--green)} .red{background:var(--red)}
+    .eq{overflow:auto}
+    .muted{color:#9fb0c4}
+    hr{border:none;height:1px;background:#1b2130;margin:26px 0}
+    nav{position:sticky;top:0;background:linear-gradient(180deg,rgba(11,12,16,.95),rgba(11,12,16,.7));backdrop-filter:blur(6px);border-bottom:1px solid #141826;z-index:10}
+    nav .wrap{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:12px;flex-wrap:wrap}
+    nav a{color:#c7d6ee;text-decoration:none;padding:6px 10px;border-radius:8px;border:1px solid #1b2130}
+    nav a:hover{background:#101422}
+  </style>
+  <!-- MathJax for equations -->
+  <script>
+    window.MathJax = { tex: {inlineMath: [['$', '$'], ['\\(', '\\)']]} };
+  </script>
+  <script defer src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <nav>
+    <div class="wrap">
+      <a href="#a1">A.1 Shoot & Digitize</a>
+      <a href="#a2">A.2 Recover Homographies</a>
+      <a href="#a3">A.3 Warp & Rectify</a>
+      <a href="#a4">A.4 Blend into Mosaic</a>
+    </div>
+  </nav>
 
+  <main>
+    <header>
+      <h1>Project 3: Homographies, Warping, Rectification & Mosaics</h1>
+      <p class="muted">All images were captured with rotations about (approximately) the same center of projection; correspondences were hand-picked and refined by RANSAC. Warps use inverse mapping with both nearest-neighbor and bilinear interpolation.</p>
+    </header>
+
+    <!-- A.1 -->
+    <section id="a1">
+      <h2>A.1 — Shoot and Digitize Pictures <span class="tag">Data</span></h2>
+      <div class="card">
+        <p><strong>Pairs:</strong> Physics Building (two views), Doe Library (two views). Each pair was captured by rotating the camera around a fixed center to satisfy the planar homography assumption for background structures.</p>
+        <div class="grid">
+          <figure>
+            <img src="figs/physics_left.jpg" alt="Physics building - first view">
+            <figcaption>Physics building — first image</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/physics_right.jpg" alt="Physics building - second rotated view">
+            <figcaption>Physics building — second image (rotated)</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/doe_left.jpg" alt="Doe library - first view">
+            <figcaption>Doe Library — first image</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/doe_right.jpg" alt="Doe library - second rotated view">
+            <figcaption>Doe Library — second image (rotated)</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- A.2 -->
+    <section id="a2">
+      <h2>A.2 — Recover Homographies <span class="tag">Estimation</span></h2>
+      <div class="card">
+        <p><strong>Method.</strong> I estimate a projective transform $p' = H p$ (with $p=(x,y,1)^\\top$ and $p'=(u,v,1)^\\top$) using the linear inhomogeneous system with $h_{33}=1$:</p>
+        <div class="eq card" style="margin-top:10px">
+          <p>For each correspondence $(x,y) \\to (u,v)$, add two rows to $A$ and $b$:</p>
+          <p>
+            \\[
+            \\begin{aligned}
+            &u = \\frac{h_{11}x + h_{12}y + h_{13}}{h_{31}x + h_{32}y + 1},\\quad
+             v = \\frac{h_{21}x + h_{22}y + h_{23}}{h_{31}x + h_{32}y + 1} \\\\[4pt]
+            &\\Rightarrow
+            \\begin{bmatrix}
+              x & y & 1 & 0 & 0 & 0 & -u x & -u y
+            \\end{bmatrix}\\,\\mathbf{h} = u,\\\\
+            &\\phantom{\\Rightarrow}
+            \\begin{bmatrix}
+              0 & 0 & 0 & x & y & 1 & -v x & -v y
+            \\end{bmatrix}\\,\\mathbf{h} = v,
+            \\end{aligned}
+            \\]
+          </p>
+          <p>Stacking all pairs yields $A\\,\\mathbf{h}=\\mathbf{b}$; I solve $\\min\\lVert A\\mathbf{h}-\\mathbf{b}\\rVert_2$ with least squares, then form</p>
+          <p class="matrix">H =
+\[\[h11 h12 h13\],
+  \[h21 h22 h23\],
+  \[h31 h32   1\]\].
+          </p>
+        </div>
+
+        <h3>Point Correspondences</h3>
+        <div class="grid">
+          <figure>
+            <img src="figs/physics_correspondences.png" alt="Physics building correspondences">
+            <figcaption>Physics example — correspondences (green=inliers, red=outliers)</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/doe_correspondences.png" alt="Doe library correspondences">
+            <figcaption>Doe example — correspondences (green=inliers, red=outliers)</figcaption>
+          </figure>
+        </div>
+
+        <h3>Recovered Homographies</h3>
+        <div class="pair">
+          <div class="card">
+            <h4>Physics building</h4>
+            <pre class="matrix">H = [[ 1.29486754e+00 -9.55432839e-02 -1.05974725e+03]
+     [ 2.07294260e-01  1.15547820e+00 -6.44322456e+02]
+     [ 5.36801520e-05 -3.20075730e-06  1.00000000e+00]]</pre>
+          </div>
+          <div class="card">
+            <h4>Doe Library</h4>
+            <pre class="matrix">H = [[ 1.33415271e+00  4.81828359e-02 -1.47213595e+03]
+     [ 8.66244002e-02  1.20402963e+00 -3.49385887e+02]
+     [ 5.58252455e-05  5.50233942e-06  1.00000000e+00]]</pre>
+          </div>
+        </div>
+
+        <div class="legend">
+          <div class="dot green"></div><span>Inliers</span>
+          <div class="dot red"></div><span>Outliers</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- A.3 -->
+    <section id="a3">
+      <h2>A.3 — Warp the Images <span class="tag">Inverse Warping</span></h2>
+      <div class="card">
+        <p><strong>Inverse warping.</strong> For each pixel $x'$ in the output canvas, I map back with $x=H^{-1}x'$ into the source image and sample there. This avoids holes. I implemented two interpolations:</p>
+        <ul>
+          <li><strong>Nearest Neighbor:</strong> round to nearest integer pixel.</li>
+          <li><strong>Bilinear:</strong> weighted average of the 4 neighbors using $(1-\\delta x)(1-\\delta y)$, etc.</li>
+        </ul>
+        <p class="muted">Canvas size is predicted by projecting source corners forward with $H$ and taking the bounding box. Pixels mapped outside the source get zero/transparent.</p>
+
+        <h3>Rectification Examples</h3>
+        <div class="pair">
+          <div>
+            <h4>Chessboard</h4>
+            <div class="grid">
+              <figure>
+                <img src="figs/rect_chess_original.jpg" alt="Original chessboard">
+                <figcaption>Original</figcaption>
+              </figure>
+              <figure>
+                <img src="figs/rect_chess_nn.jpg" alt="Rectified chessboard - NN">
+                <figcaption>Rectified — Nearest Neighbor</figcaption>
+              </figure>
+              <figure>
+                <img src="figs/rect_chess_bil.jpg" alt="Rectified chessboard - Bilinear">
+                <figcaption>Rectified — Bilinear</figcaption>
+              </figure>
+            </div>
+          </div>
+          <div>
+            <h4>Playing Cards</h4>
+            <div class="grid">
+              <figure>
+                <img src="figs/rect_cards_original.jpg" alt="Original cards">
+                <figcaption>Original</figcaption>
+              </figure>
+              <figure>
+                <img src="figs/rect_cards_nn.jpg" alt="Rectified cards - NN">
+                <figcaption>Rectified — Nearest Neighbor</figcaption>
+              </figure>
+              <figure>
+                <img src="figs/rect_cards_bil.jpg" alt="Rectified cards - Bilinear">
+                <figcaption>Rectified — Bilinear</figcaption>
+              </figure>
+            </div>
+          </div>
+        </div>
+
+        <h3>NN vs. Bilinear — Brief Notes</h3>
+        <ul>
+          <li><strong>Speed:</strong> NN is fastest; bilinear is modestly slower.</li>
+          <li><strong>Quality:</strong> Bilinear reduces jaggies/aliasing and gives smoother lines and text.</li>
+          <li><strong>Edges:</strong> NN keeps hard edges but can “stair-step” diagonals; bilinear slightly blurs fine detail.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- A.4 -->
+    <section id="a4">
+      <h2>A.4 — Blend the Images into a Mosaic <span class="tag">Feathering</span></h2>
+      <div class="card">
+        <p><strong>Procedure.</strong> (i) Pick a common mosaic frame using the global bbox across the pair. (ii) Warp one image into the mosaic via inverse warping (bilinear). (iii) Embed the unwarped partner into the same canvas. (iv) Feather with soft alpha: build a valid mask from the warped image, blur it to get $\\alpha\\in[0,1]$, then blend per pixel:
+          <br/>\\[
+          I_{\\text{mosaic}} = (1-\\alpha)\\,I_{\\text{left}} + \\alpha\\,I_{\\text{warped right}}.
+          \\]
+          For scenes with exposure differences, I optionally normalize channel means over the overlap. A symmetric blend \\((\\alpha_L I_L + \\alpha_R I_R)/(\\alpha_L+\\alpha_R)\\) further reduces seams.</p>
+
+        <h3>Example 1 — Physics Building</h3>
+        <div class="grid">
+          <figure>
+            <img src="figs/physics_left.jpg" alt="Physics left">
+            <figcaption>Original — left</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/physics_right.jpg" alt="Physics right">
+            <figcaption>Original — right</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/physics_mosaic.jpg" alt="Physics mosaic">
+            <figcaption>Final mosaic</figcaption>
+          </figure>
+        </div>
+
+        <h3>Example 2 — Doe Library</h3>
+        <div class="grid">
+          <figure>
+            <img src="figs/doe_left.jpg" alt="Doe left">
+            <figcaption>Original — left</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/doe_right.jpg" alt="Doe right">
+            <figcaption>Original — right</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/doe_mosaic.jpg" alt="Doe mosaic">
+            <figcaption>Final mosaic</figcaption>
+          </figure>
+        </div>
+
+        <h3>Example 3 — Campanile</h3>
+        <div class="grid">
+          <figure>
+            <img src="figs/campanile_left.jpg" alt="Campanile left">
+            <figcaption>Original — left</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/campanile_right.jpg" alt="Campanile right">
+            <figcaption>Original — right</figcaption>
+          </figure>
+          <figure>
+            <img src="figs/campanile_mosaic.jpg" alt="Campanile mosaic">
+            <figcaption>Final mosaic</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <hr />
+
+    <footer class="muted" style="margin-bottom:40px">
+      <p>Implementation notes: normalized DLT + RANSAC for robust H; inverse warping for both NN and bilinear; feathered alpha for blending; optional symmetric blend and exposure compensation in overlaps.</p>
+    </footer>
+  </main>
+</body>
+</html>
