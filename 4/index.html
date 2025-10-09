@@ -4,6 +4,12 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CS180 Project 3 Report</title>
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(','\\)'], ['$', '$']], displayMath: [['\\[','\\]'], ['$$','$$']] }
+    };
+  </script>
+  <script async id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
   <style>
     :root { --border:#ddd; --muted:#666; --accent:#0b6cff; --bg:#fff; }
     *{box-sizing:border-box}
@@ -37,6 +43,7 @@
     .swatch{width:12px;height:12px;border-radius:50%;display:inline-block}
     .green{background:#00a651}
     .red{background:#e11d48}
+    
   </style>
 </head>
 <body>
@@ -97,6 +104,35 @@
     <pre><code>H = [[h11 h12 h13],
      [h21 h22 h23],
      [h31 h32   1]]</code></pre>
+    
+
+    <h3 class="small">Normalized DLT (SVD) & RANSAC</h3>
+    <p class="small">
+      In addition to the least-squares fit with h_33=1, I estimate H using
+      <strong>Normalized DLT</strong> solved by <strong>SVD</strong>.
+      I first apply Hartley normalization to both point sets (\(\tilde{\mathbf{x}}=T_1\mathbf{x}\),
+      \(\tilde{\mathbf{x}}'=T_2\mathbf{x}'\)), stack the homogeneous system
+      \(A\tilde{\mathbf{h}}=\mathbf{0}\) (2 rows per match), and take \(\tilde{\mathbf{h}}\) as the
+      right singular vector corresponding to the smallest singular value of \(A\).
+      The final homography is \(H = T_2^{-1}\,\tilde{H}\,T_1\) and is scaled so \(H_{33}=1\).
+    </p>
+    
+    <pre><code># in code: dlt_homography(...)
+      1) normalize points          
+      2) build 2x9 rows per match
+      3) h = last row of V^T (SVD) (vector that satisfies Ah = 0, i.e. in nullspace of A, with smalles singular value)
+      4) denormalize and scale
+    </code></pre>
+    
+    <p class="small">
+      To be robust to outliers, I use <strong>RANSAC</strong>. Each iteration samples 4 correspondences,
+      computes a candidate \(H\) by DLT, evaluates reprojection errors, and marks inliers
+      where \(\|\pi(H\,\mathbf{x}_i)-\mathbf{x}'_i\| &lt; \tau\).
+      I adapt the number of iterations using the inlier rate \(w\) and target confidence
+      \(p\) via \(N \approx \frac{\log(1-p)}{\log(1-w^4)}\). After RANSAC, I
+      <em>refit</em> \(H\) using all inliers.
+    </p>
+
 
     <h3>Point Correspondences</h3>
     <div class="grid">
@@ -308,8 +344,34 @@
   <!-- A.4 -->
   <section id="a4">
     <h2>A.4: Blend the Images into a Mosaic</h2>
-    <p><strong>Procedure.</strong> Compute a global canvas (bbox over the pair), inverse-warp the right image into it, embed the left, then feather with a soft alpha derived from the warped support:
-      <code>I = (1-α)·I_left + α·I_warped_right</code>.
+    <h2>A.4: Blend the Images into a Mosaic</h2>
+    <p><strong>Procedure.</strong> I compute a global canvas by taking the bbox over the left image and the
+    right image warped into the left frame (via \(H_{r\to l}\)). I inverse-warp the right image into the
+    canvas, embed the left at its native coordinates, and blend using <strong>masked, normalized feathering</strong>:
+    </p>
+    
+    <pre><code># A: left image on canvas, maskA=1 inside left footprint
+    # B: right image warped into canvas, maskB=1 where sampling was valid
+    
+    wA = soft_alpha_box(maskA)   # smooth falloff toward edges
+    wB = soft_alpha_box(maskB)
+    W  = wA + wB + ε
+    
+    I_mosaic = (A * wA[...,None] + B * wB[...,None]) / W[...,None]
+    I_mosaic[W &lt; ε] = 0
+    </code></pre>
+    
+    <p class="small">
+      <em>Masks.</em> <code>maskB</code> is 1 only where the inverse warp lands inside the right image (no holes).
+      <code>maskA</code> is 1 on the left image’s support in the canvas. I soften both with a box/average filter
+      (integral-image implementation) and normalize per-pixel to avoid seams and exposure steps.
+      This replaces hard overwrite and gives a clean, symmetric blend even with imperfect alignment.
+    </p>
+    
+    <p class="small">
+      <em>Why masks?</em> The masks ensure we never average invalid samples, and the soft falloff
+      reduces ghosting at boundaries. This also makes multi-image mosaics straightforward:
+      accumulate weighted sums and divide by the weight image at the end.
     </p>
 
     <h3>Example 1 — Physics Building</h3>
