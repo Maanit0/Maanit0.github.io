@@ -5,95 +5,42 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>CS180 Project 3 Report</title>
   <style>
-    :root {
-      --border: #ddd;
-      --muted: #666;
-      --accent: #0b6cff;
-      --bg: #fff;
-    }
-    * { box-sizing: border-box; }
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Inter, Helvetica, Arial, sans-serif;
-      margin: 24px;
-      color: #111;
-      background: var(--bg);
-      line-height: 1.55;
-    }
-    header { margin-bottom: 18px; }
-    h1 { margin: 0 0 8px; font-size: 28px; }
-    h2 { margin-top: 36px; padding-top: 8px; border-top: 2px solid var(--border); font-size: 22px; }
-    h3 { margin-top: 20px; font-size: 18px; color: #222; }
-    p.note { color: var(--muted); font-size: 14px; margin: 6px 0 18px; }
-    nav {
-      position: sticky; top: 0; background: var(--bg); padding: 10px 0; margin-bottom: 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    nav .toc {
-      display: flex; flex-wrap: wrap; gap: 10px 14px; font-size: 14px;
-    }
-    nav a { color: var(--accent); text-decoration: none; }
-    nav a:hover { text-decoration: underline; }
-
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: 12px;
-      margin: 12px 0 22px;
-    }
-    .pair {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin: 12px 0 22px;
-    }
-    figure {
-      margin: 0; padding: 10px; border: 1px dashed var(--border); border-radius: 8px;
-      display: flex; flex-direction: column; align-items: center; gap: 8px;
-      background: #fff;
-    }
-    img { max-width: 100%; height: auto; display: block; }
-    figcaption { font-size: 13px; color: #333; text-align: center; }
-    .caption { font-size: 13px; color: #333; margin-top: 6px; }
-    .small { font-size: 12px; color: var(--muted); }
-
-    code { background: #f5f5f5; padding: 2px 6px; border-radius: 4px; }
-    pre {
-      background: #f8f8f8; border: 1px solid var(--border); border-radius: 8px;
-      padding: 12px; overflow: auto; font-size: 13px; line-height: 1.45;
-    }
-
-    table { width: 100%; border-collapse: collapse; margin: 14px 0 22px; table-layout: fixed; }
-    th, td { border: 1px solid var(--border); padding: 10px; text-align: center; vertical-align: top; }
-    th { background: #fafafa; font-weight: 600; }
-
-    /* Back-to-home button (matching your P2 style) */
-    .back-home {
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 1000;
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 8px 12px;
-      border-radius: 999px;
-      border: 1px solid var(--border);
-      background: #fff; color: #111;
-      text-decoration: none; font-size: 14px;
-      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-      transition: transform 0.06s ease, box-shadow 0.2s ease, background 0.2s ease;
-    }
-    .back-home:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.08); }
-    .back-home:active { transform: translateY(0); }
-    .back-home svg { width: 16px; height: 16px; }
-
-    .legend { display:flex; align-items:center; gap:10px; font-size:13px; color:#333; margin:6px 0; }
-    .swatch { width:12px; height:12px; border-radius:50%; display:inline-block; }
-    .green { background:#00a651; }
-    .red { background:#e11d48; }
+    :root { --border:#ddd; --muted:#666; --accent:#0b6cff; --bg:#fff; }
+    *{box-sizing:border-box}
+    body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Inter,Helvetica,Arial,sans-serif;margin:24px;color:#111;background:var(--bg);line-height:1.55}
+    header{margin-bottom:18px}
+    h1{margin:0 0 8px;font-size:28px}
+    h2{margin-top:36px;padding-top:8px;border-top:2px solid var(--border);font-size:22px}
+    h3{margin-top:20px;font-size:18px;color:#222}
+    p.note{color:var(--muted);font-size:14px;margin:6px 0 18px}
+    nav{position:sticky;top:0;background:var(--bg);padding:10px 0;margin-bottom:12px;border-bottom:1px solid var(--border)}
+    nav .toc{display:flex;flex-wrap:wrap;gap:10px 14px;font-size:14px}
+    nav a{color:var(--accent);text-decoration:none}
+    nav a:hover{text-decoration:underline}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;margin:12px 0 22px}
+    .pair{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px;margin:12px 0 22px}
+    figure{margin:0;padding:10px;border:1px dashed var(--border);border-radius:8px;display:flex;flex-direction:column;align-items:center;gap:8px;background:#fff}
+    img{max-width:100%;height:auto;display:block}
+    figcaption{font-size:13px;color:#333;text-align:center}
+    .caption{font-size:13px;color:#333;margin-top:6px}
+    .small{font-size:12px;color:var(--muted)}
+    code{background:#f5f5f5;padding:2px 6px;border-radius:4px}
+    pre{background:#f8f8f8;border:1px solid var(--border);border-radius:8px;padding:12px;overflow:auto;font-size:13px;line-height:1.45}
+    table{width:100%;border-collapse:collapse;margin:14px 0 22px;table-layout:fixed}
+    th,td{border:1px solid var(--border);padding:10px;text-align:center;vertical-align:top}
+    th{background:#fafafa;font-weight:600}
+    .back-home{position:fixed;top:12px;right:12px;z-index:1000;display:inline-flex;align-items:center;gap:8px;padding:8px 12px;border-radius:999px;border:1px solid var(--border);background:#fff;color:#111;text-decoration:none;font-size:14px;box-shadow:0 1px 3px rgba(0,0,0,0.06);transition:transform 0.06s ease,box-shadow 0.2s ease,background 0.2s ease}
+    .back-home:hover{transform:translateY(-1px);box-shadow:0 4px 10px rgba(0,0,0,0.08)}
+    .back-home:active{transform:translateY(0)}
+    .back-home svg{width:16px;height:16px}
+    .legend{display:flex;align-items:center;gap:10px;font-size:13px;color:#333;margin:6px 0}
+    .swatch{width:12px;height:12px;border-radius:50%;display:inline-block}
+    .green{background:#00a651}
+    .red{background:#e11d48}
   </style>
 </head>
 <body>
 
-  <!-- Back to Home -->
   <a class="back-home" href="../index.html" title="Back to Home">
     <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
       <path d="M15 6l-6 6 6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
@@ -121,19 +68,19 @@
     <p>Two pairs were captured by rotating the camera about (approximately) the same center of projection: Physics Building and Doe Library.</p>
     <div class="grid">
       <figure>
-        <img src="figs/physics_left.jpg" alt="Physics building - first view">
+        <img src="physics_left.jpg" alt="Physics building - first view">
         <figcaption>Physics Building — first image</figcaption>
       </figure>
       <figure>
-        <img src="figs/physics_right.jpg" alt="Physics building - second rotated view">
+        <img src="physics_right.jpg" alt="Physics building - second rotated view">
         <figcaption>Physics Building — second image (rotated)</figcaption>
       </figure>
       <figure>
-        <img src="figs/doe_left.jpg" alt="Doe Library - first view">
+        <img src="doe_left.jpg" alt="Doe Library - first view">
         <figcaption>Doe Library — first image</figcaption>
       </figure>
       <figure>
-        <img src="figs/doe_right.jpg" alt="Doe Library - second rotated view">
+        <img src="doe_right.jpg" alt="Doe Library - second rotated view">
         <figcaption>Doe Library — second image (rotated)</figcaption>
       </figure>
     </div>
@@ -154,11 +101,11 @@
     <h3>Point Correspondences</h3>
     <div class="grid">
       <figure>
-        <img src="figs/physics_correspondences.png" alt="Physics correspondences">
+        <img src="physics_correspondence.jpg" alt="Physics correspondences">
         <figcaption>Physics — correspondences</figcaption>
       </figure>
       <figure>
-        <img src="figs/doe_correspondences.png" alt="Doe correspondences">
+        <img src="doe_correspondence.jpg" alt="Doe correspondences">
         <figcaption>Doe — correspondences</figcaption>
       </figure>
     </div>
@@ -197,15 +144,15 @@
     <h3>Rectification — Chessboard</h3>
     <div class="grid">
       <figure>
-        <img src="figs/rect_chess_original.jpg" alt="Original chessboard">
+        <img src="chess_board.jpg" alt="Original chessboard">
         <figcaption>Original</figcaption>
       </figure>
       <figure>
-        <img src="figs/rect_chess_nn.jpg" alt="Rectified chessboard - NN">
+        <img src="chess_NNrectification.jpg" alt="Rectified chessboard - NN">
         <figcaption>Rectified — Nearest Neighbor</figcaption>
       </figure>
       <figure>
-        <img src="figs/rect_chess_bil.jpg" alt="Rectified chessboard - Bilinear">
+        <img src="chess_Brectification.jpg" alt="Rectified chessboard - Bilinear">
         <figcaption>Rectified — Bilinear</figcaption>
       </figure>
     </div>
@@ -213,15 +160,15 @@
     <h3>Rectification — Card Deck</h3>
     <div class="grid">
       <figure>
-        <img src="figs/rect_cards_original.jpg" alt="Original cards">
+        <img src="card_deck.jpg" alt="Original cards">
         <figcaption>Original</figcaption>
       </figure>
       <figure>
-        <img src="figs/rect_cards_nn.jpg" alt="Rectified cards - NN">
+        <img src="cards_NNrectification.jpg" alt="Rectified cards - NN">
         <figcaption>Rectified — Nearest Neighbor</figcaption>
       </figure>
       <figure>
-        <img src="figs/rect_cards_bil.jpg" alt="Rectified cards - Bilinear">
+        <img src="cards_Brectification.jpg" alt="Rectified cards - Bilinear">
         <figcaption>Rectified — Bilinear</figcaption>
       </figure>
     </div>
@@ -244,15 +191,15 @@
     <h3>Example 1 — Physics Building</h3>
     <div class="grid">
       <figure>
-        <img src="figs/physics_left.jpg" alt="Physics left">
+        <img src="physics_left.jpg" alt="Physics left">
         <figcaption>Original — left</figcaption>
       </figure>
       <figure>
-        <img src="figs/physics_right.jpg" alt="Physics right">
+        <img src="physics_right.jpg" alt="Physics right">
         <figcaption>Original — right</figcaption>
       </figure>
       <figure>
-        <img src="figs/physics_mosaic.jpg" alt="Physics mosaic">
+        <img src="physics_mosaic.jpg" alt="Physics mosaic">
         <figcaption>Final mosaic</figcaption>
       </figure>
     </div>
@@ -260,15 +207,15 @@
     <h3>Example 2 — Doe Library</h3>
     <div class="grid">
       <figure>
-        <img src="figs/doe_left.jpg" alt="Doe left">
+        <img src="doe_left.jpg" alt="Doe left">
         <figcaption>Original — left</figcaption>
       </figure>
       <figure>
-        <img src="figs/doe_right.jpg" alt="Doe right">
+        <img src="doe_right.jpg" alt="Doe right">
         <figcaption>Original — right</figcaption>
       </figure>
       <figure>
-        <img src="figs/doe_mosaic.jpg" alt="Doe mosaic">
+        <img src="doe_mosaic.jpg" alt="Doe mosaic">
         <figcaption>Final mosaic</figcaption>
       </figure>
     </div>
@@ -276,15 +223,15 @@
     <h3>Example 3 — Campanile</h3>
     <div class="grid">
       <figure>
-        <img src="figs/campanile_left.jpg" alt="Campanile left">
+        <img src="camp_left.jpg" alt="Campanile left">
         <figcaption>Original — left</figcaption>
       </figure>
       <figure>
-        <img src="figs/campanile_right.jpg" alt="Campanile right">
+        <img src="camp_right.jpg" alt="Campanile right">
         <figcaption>Original — right</figcaption>
       </figure>
       <figure>
-        <img src="figs/campanile_mosaic.jpg" alt="Campanile mosaic">
+        <img src="camp_mosaic.jpg" alt="Campanile mosaic">
         <figcaption>Final mosaic</figcaption>
       </figure>
     </div>
