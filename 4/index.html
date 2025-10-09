@@ -68,19 +68,19 @@
     <p>Two pairs were captured by rotating the camera about (approximately) the same center of projection: Physics Building and Doe Library.</p>
     <div class="grid">
       <figure>
-        <img src="physics_left.jpg" alt="Physics building - first view">
+        <img src="./media/physics_left.jpg" alt="Physics building - first view">
         <figcaption>Physics Building — first image</figcaption>
       </figure>
       <figure>
-        <img src="physics_right.jpg" alt="Physics building - second rotated view">
+        <img src="./media/physics_right.jpg" alt="Physics building - second rotated view">
         <figcaption>Physics Building — second image (rotated)</figcaption>
       </figure>
       <figure>
-        <img src="doe_left.jpg" alt="Doe Library - first view">
+        <img src=",/media/doe_left.jpg" alt="Doe Library - first view">
         <figcaption>Doe Library — first image</figcaption>
       </figure>
       <figure>
-        <img src="doe_right.jpg" alt="Doe Library - second rotated view">
+        <img src="./media/doe_right.jpg" alt="Doe Library - second rotated view">
         <figcaption>Doe Library — second image (rotated)</figcaption>
       </figure>
     </div>
@@ -101,11 +101,11 @@
     <h3>Point Correspondences</h3>
     <div class="grid">
       <figure>
-        <img src="physics_correspondence.jpg" alt="Physics correspondences">
+        <img src="./media/physics_correspondence.jpg" alt="Physics correspondences">
         <figcaption>Physics — correspondences</figcaption>
       </figure>
       <figure>
-        <img src="doe_correspondence.jpg" alt="Doe correspondences">
+        <img src="./media/doe_correspondence.jpg" alt="Doe correspondences">
         <figcaption>Doe — correspondences</figcaption>
       </figure>
     </div>
@@ -144,15 +144,15 @@
     <h3>Rectification — Chessboard</h3>
     <div class="grid">
       <figure>
-        <img src="chess_board.jpg" alt="Original chessboard">
+        <img src="./media/chess_board.jpg" alt="Original chessboard">
         <figcaption>Original</figcaption>
       </figure>
       <figure>
-        <img src="chess_NNrectification.jpg" alt="Rectified chessboard - NN">
+        <img src="./media/chess_NNrectification.jpg" alt="Rectified chessboard - Nearest Neighbor Interpolation">
         <figcaption>Rectified — Nearest Neighbor</figcaption>
       </figure>
       <figure>
-        <img src="chess_Brectification.jpg" alt="Rectified chessboard - Bilinear">
+        <img src="./media/chess_Brectification.jpg" alt="Rectified chessboard - Bilinear Interpolation">
         <figcaption>Rectified — Bilinear</figcaption>
       </figure>
     </div>
@@ -160,15 +160,15 @@
     <h3>Rectification — Card Deck</h3>
     <div class="grid">
       <figure>
-        <img src="card_deck.jpg" alt="Original cards">
+        <img src="./media/card_deck.jpg" alt="Original cards">
         <figcaption>Original</figcaption>
       </figure>
       <figure>
-        <img src="cards_NNrectification.jpg" alt="Rectified cards - NN">
+        <img src="./media/cards_NNrectification.jpg" alt="Rectified cards - Nearest Neighbor Interpolation">
         <figcaption>Rectified — Nearest Neighbor</figcaption>
       </figure>
       <figure>
-        <img src="cards_Brectification.jpg" alt="Rectified cards - Bilinear">
+        <img src="./mediacards_Brectification.jpg" alt="Rectified cards - Bilinear Interpolation">
         <figcaption>Rectified — Bilinear</figcaption>
       </figure>
     </div>
@@ -176,7 +176,7 @@
     <h3>Nearest Neighbor vs. Bilinear (Brief)</h3>
     <ul>
       <li><strong>Speed:</strong> NN is fastest; Bilinear is slightly slower.</li>
-      <li><strong>Quality:</strong> Bilinear reduces aliasing/jaggies; NN keeps hard edges but “stair-steps”.</li>
+      <li><strong>Quality:</strong> Bilinear reduces aliasing/jaggies; NN keeps hard edges. </li>
       <li><strong>Detail:</strong> Bilinear can blur very fine texture; NN preserves pixel values exactly.</li>
     </ul>
   </section>
@@ -186,20 +186,20 @@
     <h2>A.4: Blend the Images into a Mosaic</h2>
     <p><strong>Procedure.</strong> Compute a global canvas (bbox over the pair), inverse-warp the right image into it, embed the left, then feather with a soft alpha derived from the warped support:
       <code>I = (1-α)·I_left + α·I_warped_right</code>.
-      For tougher seams or exposure shifts, I optionally apply symmetric feathering and per-channel gain in the overlap.</p>
+    </p>
 
     <h3>Example 1 — Physics Building</h3>
     <div class="grid">
       <figure>
-        <img src="physics_left.jpg" alt="Physics left">
+        <img src=./media/"physics_left.jpg" alt="Physics left">
         <figcaption>Original — left</figcaption>
       </figure>
       <figure>
-        <img src="physics_right.jpg" alt="Physics right">
+        <img src="./media/physics_right.jpg" alt="Physics right">
         <figcaption>Original — right</figcaption>
       </figure>
       <figure>
-        <img src="physics_mosaic.jpg" alt="Physics mosaic">
+        <img src="./media/physics_mosaic.jpg" alt="Physics mosaic">
         <figcaption>Final mosaic</figcaption>
       </figure>
     </div>
@@ -207,15 +207,15 @@
     <h3>Example 2 — Doe Library</h3>
     <div class="grid">
       <figure>
-        <img src="doe_left.jpg" alt="Doe left">
+        <img src="./media/doe_left.jpg" alt="Doe left">
         <figcaption>Original — left</figcaption>
       </figure>
       <figure>
-        <img src="doe_right.jpg" alt="Doe right">
+        <img src="./media/doe_right.jpg" alt="Doe right">
         <figcaption>Original — right</figcaption>
       </figure>
       <figure>
-        <img src="doe_mosaic.jpg" alt="Doe mosaic">
+        <img src="./media/doe_mosaic.jpg" alt="Doe mosaic">
         <figcaption>Final mosaic</figcaption>
       </figure>
     </div>
@@ -223,22 +223,22 @@
     <h3>Example 3 — Campanile</h3>
     <div class="grid">
       <figure>
-        <img src="camp_left.jpg" alt="Campanile left">
+        <img src="./media/camp_left.jpg" alt="Campanile left">
         <figcaption>Original — left</figcaption>
       </figure>
       <figure>
-        <img src="camp_right.jpg" alt="Campanile right">
+        <img src="./media/camp_right.jpg" alt="Campanile right">
         <figcaption>Original — right</figcaption>
       </figure>
       <figure>
-        <img src="camp_mosaic.jpg" alt="Campanile mosaic">
+        <img src="./media/camp_mosaic.jpg" alt="Campanile mosaic">
         <figcaption>Final mosaic</figcaption>
       </figure>
     </div>
   </section>
 
   <footer class="small">
-    <p>Notes: Normalized DLT + RANSAC for robust H; inverse warping (NN & Bilinear); feathered alpha for blending; optional symmetric blend & exposure compensation.</p>
+    <p>Notes: Normalized DLT + RANSAC for robust H; inverse warping (NN & Bilinear); feathered alpha for blending</p>
   </footer>
 
 </body>
