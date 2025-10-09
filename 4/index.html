@@ -89,7 +89,7 @@
   <!-- A.2 -->
   <section id="a2">
     <h2>A.2: Recover Homographies</h2>
-    <p><strong>Method.</strong> For each correspondence \((x,y)\to(u,v)\) and fixing \(h_{33}=1\), I assemble the least-squares system \(A\,\mathbf{h}= \mathbf{b}\):</p>
+    <p><strong>Method.</strong> For each correspondence (x1, y1) to (u, v) and fixing h_33 = 1, I assemble the least-squares system Ah = b:</p>
     <pre><code>[x y 1  0 0 0  -u x  -u y] · h = u
 [0 0 0  x y 1  -v x  -v y] · h = v
 </code></pre>
