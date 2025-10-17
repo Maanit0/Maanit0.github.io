@@ -511,6 +511,15 @@
       <figcaption>Automatic (Part B)</figcaption>
     </figure>
   </div>
+
+<p class="small">
+  <strong>Comparison Analysis.</strong> My manual and automatic 
+  methods select different inlier sets, so the estimated homographies favor different regions. 
+  For example, in the physics building example, manual selection emphasized roof features, yielding a well-aligned (but slightly soft) roof, while 
+  the left green tree misaligns and blurs. The automatic method favored strong, repeatable features on the tree, aligning it sharply but leaving roof details slightly misregistered. 
+  In short, each method’s inlier distribution biases the mosaic toward the areas that the respective method's inliers dominate.
+</p>
+
 </section>
 
   <footer class="small">
