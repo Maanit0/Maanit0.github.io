@@ -425,6 +425,17 @@
 
   <section id="b1">
   <h2>B.1: Harris Corner Detection</h2>
+
+  <p>
+  I detected the Harris corners in my example images using the skimage.feature library and specifically its functions corner_harris, peak_local_max. 
+  After computing the Harris corners and the Harris matrix, I applied <strong>Adaptive Non-Maximal Suppression (ANMS)</strong> to select a uniformly distributed subset of strong corners. 
+  My ANMS implementation details: I first discard non-positive responses and sort corners by Harris score descending.
+  Then for each corner i (in this order), I compute its suppression radius rᵢ as the squared distance to the
+  nearest previously seen corner whose response is &gt; c<sub>robust</sub>·fᵢ. If none exist, rᵢ stays ∞.
+  Finally, I select the top N corners with the largest radii. Sorting makes the search “one-way” (each point
+  only checks stronger points), which both matches ANMS and simplifies the implementation.
+  </p>
+    
   <p>Detected Harris corners on the first Physics image, shown without ANMS and with ANMS (n = 1,000, c<sub>robust</sub> = 0.9).</p>
   <div class="pair">
     <figure>
@@ -440,6 +451,14 @@
 
 <section id="b2">
   <h2>B.2: Feature Descriptor Extraction</h2>
+  <p>
+  For each example image, I first blurred it using a convolution with a Gaussian filter with a sigma value of 2.0.
+  Around each ANMS-selected corner, I extracted a 40×40 grayscale patch of the blurred image, and downsampled
+  it to an 8×8 descriptor by skipping 5 pixels between each sample from the respective 40x40 blurred patch. 
+  Each descriptor was normalized to zero mean and unit variance to make it
+  invariant to illumination changes. These descriptors represent local texture around corners for matching.
+  </p>
+
   <p>Normalized 8×8 feature descriptors extracted from the first Physics image.</p>
   <div class="grid">
     <figure>
