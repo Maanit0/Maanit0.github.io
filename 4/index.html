@@ -423,6 +423,96 @@
     </div>
   </section>
 
+  <section id="b1">
+  <h2>B.1: Harris Corner Detection</h2>
+  <p>Detected Harris corners on the first Physics image, shown without ANMS and with ANMS (n = 1,000, c<sub>robust</sub> = 0.9).</p>
+  <div class="pair">
+    <figure>
+      <img src="./media/physics_harris_corners.jpg" alt="Physics Harris corners without ANMS">
+      <figcaption>Harris corners (no ANMS)</figcaption>
+    </figure>
+    <figure>
+      <img src="./media/physics1_anms_corners.jpg" alt="Physics Harris corners with ANMS">
+      <figcaption>Harris corners with ANMS (n=1000, c<sub>robust</sub>=0.9)</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="b2">
+  <h2>B.2: Feature Descriptor Extraction</h2>
+  <p>Normalized 8×8 feature descriptors extracted from the first Physics image.</p>
+  <div class="grid">
+    <figure>
+      <img src="./media/physics1_patches_features_pairs.jpg" alt="Physics 8x8 normalized feature descriptors">
+      <figcaption>Extracted 8×8 normalized descriptors (sample visualization)</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="b3">
+  <h2>B.3: Feature Matching</h2>
+  <p>Matched feature pairs between Physics left and right images.</p>
+  <div class="grid">
+    <figure>
+      <img src="./media/physics_matched_features_visual.jpg" alt="Matched features between Physics image pair">
+      <figcaption>Matched features — Physics pair</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section id="b4">
+  <h2>B.4: RANSAC for Robust Homography</h2>
+  <p>Inlier matches from 4-point RANSAC (with outliers shown) for the Physics example.</p>
+  <div class="grid">
+    <figure>
+      <img src="./media/physics_B_correspondence.jpg" alt="RANSAC inliers and outliers for Physics">
+      <figcaption>RANSAC correspondences — inliers and outliers</figcaption>
+    </figure>
+  </div>
+
+  <h3>Manual vs. Automatic Stitching</h3>
+  <p class="small">Manual = Part A mosaics (hand-picked correspondences). Automatic = Part B pipeline (Harris + ANMS + descriptors + matching + RANSAC).</p>
+
+  <!-- Physics comparison -->
+  <h3 class="small">Physics Building</h3>
+  <div class="pair">
+    <figure>
+      <img src="./media/physics_mosaic.jpg" alt="Physics mosaic (manual)">
+      <figcaption>Manual (Part A)</figcaption>
+    </figure>
+    <figure>
+      <img src="./media/physics_mosaic_B.jpg" alt="Physics mosaic (automatic)">
+      <figcaption>Automatic (Part B)</figcaption>
+    </figure>
+  </div>
+
+  <!-- Doe comparison -->
+  <h3 class="small">Doe Library</h3>
+  <div class="pair">
+    <figure>
+      <img src="./media/doe_mosaic.jpg" alt="Doe mosaic (manual)">
+      <figcaption>Manual (Part A)</figcaption>
+    </figure>
+    <figure>
+      <img src="./media/doe_B_mosaic.jpg" alt="Doe mosaic (automatic)">
+      <figcaption>Automatic (Part B)</figcaption>
+    </figure>
+  </div>
+
+  <!-- Campanile comparison -->
+  <h3 class="small">Campanile</h3>
+  <div class="pair">
+    <figure>
+      <img src="./media/camp_mosaic.jpg" alt="Campanile mosaic (manual)">
+      <figcaption>Manual (Part A)</figcaption>
+    </figure>
+    <figure>
+      <img src="./media/camp_B_camp.jpg" alt="Campanile mosaic (automatic)">
+      <figcaption>Automatic (Part B)</figcaption>
+    </figure>
+  </div>
+</section>
+
   <footer class="small">
     <p>Notes: Normalized DLT + RANSAC for robust H; inverse warping (NN & Bilinear); feathered alpha for blending</p>
   </footer>
