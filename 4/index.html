@@ -476,9 +476,26 @@
 <section id="b3">
   <h2>B.3: Feature Matching</h2>
   <p> I implemented <strong>feature matching</strong> using the <em>Nearest Neighbor Distance Ratio (NNDR)</em> test. For each feature descriptor from the first image, I compute the squared Euclidean distance to all descriptors in the second image. The two smallest distances (<code>e1</code>, <code>e2</code>) correspond to the best and second-best matches. I then apply the ratio test: if <code>e1 / e2 &lt; threshold</code>, 
-  the match is accepted as reliable. This rejects ambiguous matches where the nearest and second-nearest descriptors are similarly close. The result is a set of confident correspondences used for estimating the homography in Part B.4. </p> <pre><code># 
-  in code: get_candidate_matches_from_features(...) for each f1 in image1_features: compute squared L2 error to all features in image2 find two nearest neighbors (e1, e2) if (e1 / e2) 
-  < threshold: keep match (f1 ↔ f2) </code></pre> <p class="small"> This approach is simple yet effective: it captures only distinct feature correspondences, improving robustness for the later RANSAC stage. 
+  the match is accepted as reliable. This rejects ambiguous matches where the nearest and second-nearest descriptors are similarly close. The result is a set of confident correspondences used for estimating the homography in Part B.4. 
+
+  <pre><code># in code: get_candidate_matches_from_features(...)
+
+  for each feature f1 in image1_features:
+      # 1) compute squared L2 error to all features in image2
+      errors = ||f1 - f2||^2 for every f2 in image2_features
+  
+      # 2) find the two nearest neighbors (smallest errors)
+      e1 = smallest(errors)
+      e2 = second_smallest(errors)
+  
+      # 3) NNDR test
+      if e1 / (e2 + 1e-10) &lt; threshold:
+          keep match (f1 ↔ argmin_f2(errors))
+  </code></pre>
+
+    
+    
+  This approach is simple yet effective: it captures only distinct feature correspondences, improving robustness for the later RANSAC stage. 
   </p>
   <p>Matched feature pairs between Physics left and right images.</p>
   <div class="grid">
@@ -491,9 +508,40 @@
 
 <section id="b4">
   <h2>B.4: RANSAC for Robust Homography</h2>
-  <p> To make the homography estimation robust to outliers from automatic feature matching, I implemented a <strong>4-point RANSAC</strong> algorithm with adaptive iteration control and reprojection error evaluation. Below is a concise summary of my method: </p> <ul> <li><strong>Input:</strong> Candidate feature correspondences obtained from Part B.3.</li> <li><strong>Random Sampling:</strong> Randomly select 4 correspondence pairs per iteration to estimate a candidate homography using the DLT method.</li> <li><strong>Reprojection Error:</strong> <ul> <li>Project all points from image 1 using the candidate <code>H</code>.</li> <li>Compute the Euclidean distance between the projected point and its true correspondence in image 2.</li> <li>Points with error less than <code>τ = 3 px</code> are classified as inliers.</li> </ul> </li> <li><strong>Adaptive Iteration Count:</strong> <ul> <li>Track the inlier ratio <code>w</code> and update the required number of iterations based on confidence <code>p = 0.995</code> using:</li> <li><code>N = log(1 − p) / log(1 − w⁴)</code></li> </ul> </li> <li><strong>Model Selection:</strong> Keep the homography producing the maximum number of inliers.</li> <li><strong>Final Refinement:</strong> Re-estimate <code>H</code> using all inliers to improve accuracy.</li> 
-  </ul> <pre><code># in code: ransac_homography(...) while i < max_iters: idx = rng.choice(N, 4, replace=False) H_candidate = dlt_homography(pts1[idx], pts2[idx]) errors = reproj_errors(H_candidate, pts1, pts2) inliers = errors < 
-                                                               threshold update best_H if inlier count improves update max_iters using inlier ratio and confidence H_final = dlt_homography(pts1[inliers], pts2[inliers]) </code></pre> 
+  <p> To make the homography estimation robust to outliers from automatic feature matching, I implemented a <strong>4-point RANSAC</strong> algorithm with adaptive iteration control and reprojection error evaluation. Below is a concise summary of my method: </p> <ul> <li><strong>Input:</strong> Candidate feature correspondences obtained from Part B.3.
+  </li> <li><strong>Random Sampling:</strong> Randomly select 4 correspondence pairs per iteration to estimate a candidate homography using the DLT method.</li> <li><strong>Reprojection Error:</strong> <ul> <li>Project all points from image 1 using the candidate <code>H</code>.</li> <li>Compute the Euclidean distance between the projected point and its true correspondence in image 2.
+  </li> <li>Points with error less than <code>τ = 3 px</code> are classified as inliers.</li> </ul> </li> <li><strong>Adaptive Iteration Count:</strong> <ul> <li>Track the inlier ratio <code>w</code> and update the required number of iterations based on confidence <code>p = 0.995</code> using:</li> <li><code>N = log(1 − p) / log(1 − w⁴)</code></li> </ul> </li> <li><strong>
+    Model Selection:</strong> Keep the homography producing the maximum number of inliers.</li> <li><strong>Final Refinement:</strong> 
+    Re-estimate <code>H</code> using all inliers to improve accuracy.</li> </ul> 
+
+  <pre><code># in code: ransac_homography(...)
+
+  while i &lt; max_iters:
+      # 1) Randomly sample 4 correspondences
+      idx = rng.choice(N, 4, replace=False)
+  
+      # 2) Estimate candidate homography using DLT
+      H_candidate = dlt_homography(pts1[idx], pts2[idx])
+  
+      # 3) Compute reprojection errors for all correspondences
+      errors = reproj_errors(H_candidate, pts1, pts2)
+  
+      # 4) Determine inliers based on threshold
+      inliers = errors &lt; threshold
+  
+      # 5) Update best_H if current inlier count improves
+      if inliers.sum() &gt; best_inliers.sum():
+          best_H = H_candidate
+          best_inliers = inliers
+  
+      # 6) Adapt iteration count based on inlier ratio and confidence
+      update max_iters using: N = log(1 - conf) / log(1 - w⁴)
+  
+  # 7) Refit final homography using all inliers
+  H_final = dlt_homography(pts1[inliers], pts2[inliers])
+  </code></pre>
+
+  
   <p>
   <p><strong>Automatic
   <p>Inlier matches from 4-point RANSAC (with outliers shown) for the Physics example.</p>
