@@ -507,7 +507,7 @@
   <p>Mosaic Generation Pipeline:</strong></p> <ul> <li>Detect Harris corners in both images.</li> <li>
     Apply ANMS to select 1,000 spatially uniform, strong corners.</li> <li>
       Extract 8×8 normalized feature descriptors around each corner.</li> <li>
-        Match features using NNDR (<code>threshold = 0.5</code>).</li> <li>Estimate a robust <code>H</code> 
+        Match features using Nearest Neighbor Distance Error Ratio (<code>threshold = 0.5</code>).</li> <li>Estimate a robust <code>H</code> 
           using the 4-point RANSAC algorithm.</li> <li>Warp the right image into the left frame using inverse warping.</li> 
     <li>Blend both images with masked normalized feathering for seamless transitions.</li> </ul> <p class="small"> 
       The reprojection error function ensures only geometrically valid correspondences contribute to the homography. 
