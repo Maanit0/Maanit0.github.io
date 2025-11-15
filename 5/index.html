@@ -1,1 +1,495 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CS180 Project 4: Neural Fields and Neural Radiance Fields</title>
+  <style>
+    body {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 24px;
+      line-height: 1.5;
+    }
+    h1, h2, h3, h4 {
+      font-weight: 600;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 0.25rem;
+    }
+    h4 {
+      margin-top: 0.25rem;
+      text-align: center;
+      font-weight: 400;
+      color: #555;
+    }
+    section {
+      margin-top: 32px;
+      border-top: 1px solid #ddd;
+      padding-top: 20px;
+    }
+    figure {
+      margin: 12px 0;
+      text-align: center;
+    }
+    figure img, figure video {
+      max-width: 100%;
+      border-radius: 6px;
+    }
+    figcaption {
+      font-size: 0.9rem;
+      color: #555;
+      margin-top: 4px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .grid-4 {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+    .small-text {
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .center {
+      text-align: center;
+    }
+    .code-desc-list {
+      margin-left: 1.25rem;
+    }
+  </style>
+</head>
+<body>
 
+  <h1>CS180 Project 4</h1>
+  <h4>Neural Fields and Neural Radiance Fields</h4>
+
+  <!-- ======================== Part 0 ======================== -->
+  <section id="part0">
+    <h2>Part 0: Calibrating Your Camera and Capturing a 3D Scan</h2>
+    <p>
+      In this part, I calibrated my camera using images of a calibration target, then used the
+      recovered intrinsics and camera poses to visualize a sparse 3D scan of the scene in Viser.
+      The plots below show the camera frustums and associated images used to build the initial
+      3D understanding of the environment.
+    </p>
+
+    <div class="grid-2">
+      <figure>
+        <img src="./media/part0_cloud1.png" alt="Camera cloud visualization 1" />
+        <figcaption>Camera frustums and images in Viser (view 1).</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/part0_cloud2.png" alt="Camera cloud visualization 2" />
+        <figcaption>Camera frustums and images in Viser (view 2).</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <!-- ======================== Part 1 ======================== -->
+  <section id="part1">
+    <h2>Part 1: Fit a Neural Field to a 2D Image</h2>
+
+    <h3>Model Architecture and Training Setup</h3>
+    <p>
+      For the 2D neural field, I first normalized each image to RGB values in the range
+      <code>[0, 1]</code> for more stable learning. My model uses a positional encoding (PE)
+      layer with maximum frequency level <strong>L = 10</strong>, which allows the network to
+      capture high-frequency details in the image as a function of pixel coordinates.
+    </p>
+    <p>
+      The encoded coordinates are passed through a stack of <strong>three</strong> Linear + ReLU
+      layers, each with a width of <strong>256 channels</strong>. Finally, I use a Linear +
+      Sigmoid output layer with width <strong>3</strong> to predict RGB values at each pixel
+      coordinate. The Sigmoid output ensures that predicted colors remain in the valid
+      <code>(0, 1)</code> range.
+    </p>
+    <p>
+      I trained the model with a mean-squared error (MSE) loss and the Adam optimizer with a
+      learning rate of <strong>1e-2</strong>. At each iteration, I sampled a batch of
+      <strong>10,000</strong> pixel coordinates and ran the training loop for
+      <strong>1000 iterations</strong>. I used Peak Signal-to-Noise Ratio (PSNR) to measure the
+      reconstruction quality over time.
+    </p>
+
+    <figure>
+      <img src="./media/part1_model_architecture.jpg" alt="2D neural field model architecture" />
+      <figcaption>Model architecture for the 2D neural field (positional encoding + MLP).</figcaption>
+    </figure>
+
+    <h3>Training Progression (Staff Fox Image and My Bottle Image)</h3>
+    <p>
+      Below are training progress visualizations for both the provided staff fox image and my own
+      custom bottle image. Each figure shows how the neural field gradually improves its
+      reconstruction quality across training iterations.
+    </p>
+
+    <div class="grid-2">
+      <figure>
+        <img src="./media/2d_fox_training_progress.jpg" alt="2D fox training progression" />
+        <figcaption>Training progression on the provided fox image.</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/2d_bottle_training_progress.jpg" alt="2D bottle training progression" />
+        <figcaption>Training progression on my bottle image.</figcaption>
+      </figure>
+    </div>
+
+    <h3>Effect of Positional Encoding Frequency and Width</h3>
+    <p>
+      I evaluated the impact of two different maximum positional encoding frequencies
+      (<strong>L = 2</strong> and <strong>L = 10</strong>) and two different MLP widths
+      (<strong>32</strong> and <strong>256</strong> channels). This yields four model
+      configurations, whose final reconstructions are shown in a 2×2 grid.
+    </p>
+
+    <figure>
+      <img src="./media/bottle_2x2.jpg" alt="2x2 grid of PE and width choices" />
+      <figcaption>
+        Final results for different combinations of max positional encoding frequency
+        (L = 2 vs L = 10) and MLP width (32 vs 256).
+      </figcaption>
+    </figure>
+
+    <h3>PSNR Curve on My Bottle Image</h3>
+    <p>
+      The PSNR curve below shows how the reconstruction quality on my bottle image improves over
+      training iterations. As training progresses, the model quickly captures the global color
+      structure and then refines high-frequency bottle details.
+    </p>
+
+    <figure>
+      <img src="./media/psnr_curve_bottle.jpg" alt="PSNR curve for bottle image" />
+      <figcaption>PSNR curve for training on my bottle image.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ======================== Part 2 ======================== -->
+  <section id="part2">
+    <h2>Part 2: Fit a Neural Radiance Field from Multi-view Images (Lego Dataset)</h2>
+    <p>
+      In this part, I implemented a full Neural Radiance Field (NeRF) pipeline on the Lego dataset.
+      This includes building rays from camera parameters, sampling along those rays, creating a
+      custom ray dataloader, defining the NeRF architecture, performing volume rendering, and
+      training the model end-to-end. I also visualized the ray geometry, training progress, and
+      rendered novel views.
+    </p>
+
+    <h3>Part 2.1: Create Rays from Cameras</h3>
+    <p>
+      To create rays from cameras, I:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        Implemented a function to transform 3D points from camera coordinates into world coordinates
+        using the camera-to-world extrinsic matrix (rotation and translation).
+      </li>
+      <li>
+        Implemented a pixel-to-camera mapping that backprojects pixel coordinates and a depth
+        parameter into 3D camera coordinates using the camera intrinsics
+        (<em>f<sub>x</sub>, f<sub>y</sub>, c<sub>x</sub>, c<sub>y</sub></em>).
+      </li>
+      <li>
+        Combined these pieces into a pixel-to-ray function that:
+        (1) converts pixel centers into 3D camera points on a reference depth plane,
+        (2) transforms them into world coordinates, and
+        (3) constructs ray origins at the camera center and ray directions pointing through each
+        pixel, normalized to unit length.
+      </li>
+    </ul>
+
+    <h3>Part 2.2: Sampling</h3>
+
+    <h4>Sampling Rays from Images</h4>
+    <p>
+      To feed the NeRF with diverse observations, I implemented a sampler that:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        Randomly selects a set of pixels across all training images by sampling indices over the
+        product of (num_images × height × width).
+      </li>
+      <li>
+        Computes the corresponding image indices and pixel coordinates, then converts those pixels
+        into camera rays using the pixel-to-ray function applied to the selected camera poses.
+      </li>
+      <li>
+        Normalizes all ray directions and returns a batch of ray origins, ray directions, and the
+        ground truth RGB colors at the sampled pixel locations.
+      </li>
+    </ul>
+
+    <h4>Sampling Points along Rays</h4>
+    <p>
+      Along each ray, I:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        Uniformly sample a fixed number of depth values between specified near and far bounds
+        (e.g., 2.0 to 6.0 for the Lego scene).
+      </li>
+      <li>
+        Optionally add stratified noise to the depths: I compute midpoints and bin widths and
+        jitter each sample within its bin for better integration and anti-aliasing.
+      </li>
+      <li>
+        Convert these depth samples into 3D world points by starting at the ray origin and moving
+        along the ray direction according to each sampled depth.
+      </li>
+      <li>
+        Return the 3D sample points together with the associated depth values along the ray.
+      </li>
+    </ul>
+
+    <h3>Part 2.3: Putting the Dataloading All Together</h3>
+    <p>
+      I wrapped the above components into a custom ray dataset class that:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        Stores all training images, the shared camera intrinsics matrix, and the camera-to-world
+        extrinsics for each view.
+      </li>
+      <li>
+        Precomputes a grid of pixel coordinates and, for visualization, a reference set of rays
+        from a single camera.
+      </li>
+      <li>
+        On each call to the sampling method, randomly picks image–pixel pairs, converts their
+        pixel coordinates into rays using the correct camera pose, and returns ray origins, ray
+        directions, and their corresponding RGB colors.
+      </li>
+    </ul>
+
+    <figure>
+      <img src="./media/part2.3_rays.png" alt="Visualization of cameras and rays" />
+      <figcaption>
+        Visualization of cameras and 100 rays sampled at a single training step.
+      </figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/part2.3_samples.png" alt="Visualization of cameras, rays, and samples" />
+      <figcaption>
+        Visualization of cameras, 100 rays from a single camera, and the sampled points along those rays.
+      </figcaption>
+    </figure>
+
+    <h3>Part 2.4: Neural Radiance Field Architecture</h3>
+    <p>
+      My NeRF model consists of:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        A positional encoding module that maps 3D positions and viewing directions into a higher
+        dimensional space using sinusoidal functions up to a specified maximum frequency
+        (e.g., L<sub>x</sub> = 10 for positions and L<sub>d</sub> = 4 for directions). This
+        allows the network to represent high-frequency geometry and view-dependent appearance.
+      </li>
+      <li>
+        A trunk MLP that processes the encoded 3D position, with several fully connected layers of
+        width 256 and a skip connection that concatenates the original positional encoding back
+        into the network at a chosen depth. This helps preserve high-frequency details.
+      </li>
+      <li>
+        A density head that maps the trunk features to a single non-negative density value
+        (sigma) per sample, with a positive bias initialization to encourage non-zero densities
+        early in training.
+      </li>
+      <li>
+        A feature head that produces intermediate features, which are concatenated with the encoded
+        view directions and passed through a color head to predict RGB values in <code>(0, 1)</code>
+        via a final Sigmoid activation.
+      </li>
+    </ul>
+
+    <figure>
+      <img src="./media/neural_radiance_field_arch.png" alt="NeRF architecture diagram" />
+      <figcaption>Neural Radiance Field architecture used for the Lego dataset.</figcaption>
+    </figure>
+
+    <h3>Part 2.5: Volume Rendering and Training</h3>
+    <p>
+      For volume rendering, I:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        Evaluate the NeRF at all sample points along a batch of rays to get densities and colors.
+      </li>
+      <li>
+        Compute alpha values from the densities using an exponential attenuation model with a
+        constant step size between samples.
+      </li>
+      <li>
+        Accumulate transmittance along each ray as the product of the remaining transparency and
+        use it to compute per-sample weights.
+      </li>
+      <li>
+        Produce the final rendered color for each ray by taking a weighted sum of the predicted
+        colors along that ray.
+      </li>
+    </ul>
+
+    <p>
+      For training, I:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        Repeatedly sample random rays from the multi-view dataset, sample points along those rays,
+        query the NeRF, and render colors via volume rendering.
+      </li>
+      <li>
+        Compute an MSE loss between the rendered colors and the ground-truth pixel colors, and
+        optimize with Adam using a learning rate of 5e-4.
+      </li>
+      <li>
+        Periodically render a small set of validation views, compute their PSNR, and save
+        intermediate images to monitor training progress.
+      </li>
+      <li>
+        Trained for 1000 steps on the Lego dataset with near = 2.0, far = 6.0, n_samples = 64,
+        and batches of 10,000 rays.
+      </li>
+    </ul>
+
+    <figure>
+      <img src="./media/progress_strip.png" alt="Lego training progression strip" />
+      <figcaption>Predicted Lego images across training iterations.</figcaption>
+    </figure>
+
+    <figure>
+      <img src="./media/lego_psnr_val_curve.jpg" alt="Lego validation PSNR curve" />
+      <figcaption>
+        Validation PSNR curve on 6 Lego views. The model reaches a validation PSNR of
+        approximately <strong>23.37 dB</strong> after 1000 training steps.
+      </figcaption>
+    </figure>
+
+    <h3>Spherical Rendering of the Lego Scene</h3>
+    <p>
+      Using the provided test camera extrinsics (<code>c2ws_test</code>) and the trained NeRF
+      (1000 iterations), I rendered a spherical orbit video around the Lego scene. The video
+      below shows smooth novel views as the camera moves around the object.
+    </p>
+
+    <figure>
+      <video src="./media/lego_spin.mp4" autoplay loop muted controls></video>
+      <figcaption>Spherical orbit rendering of the Lego scene using the trained NeRF.</figcaption>
+    </figure>
+  </section>
+
+  <!-- ======================== Part 2.6 ======================== -->
+  <section id="part2-6">
+    <h2>Part 2.6: Training with My Own Data (Spindrift Can)</h2>
+
+    <h3>Hyperparameter and Code Changes</h3>
+    <p>
+      For my own dataset (a Spindrift can with ArUco markers on a table), I adjusted the NeRF
+      hyperparameters and training procedure to better reflect the geometry of my capture setup:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        <strong>near = 0.002:</strong> I set a much smaller near bound because some images have
+        the bottle extremely close to the camera, and I wanted to start sampling just in front
+        of the camera.
+      </li>
+      <li>
+        <strong>far = 1.0:</strong> I used a far bound of 1.0 since the bottle and ArUco tags
+        are relatively close to the camera in all views. This is large enough to include the
+        table and tags but small enough to avoid sampling unnecessary background.
+      </li>
+      <li>
+        <strong>n_samples = 128:</strong> I increased the number of samples per ray for more
+        accurate volume rendering on my custom scene, which helps resolve fine details of the
+        bottle and markers.
+      </li>
+      <li>
+        Instead of rendering validation views during training (which caused GPU memory pressure),
+        I modified the training loop to periodically save model checkpoints to disk. After
+        training completed, I reset the notebook and separately loaded these checkpoints to
+        render intermediate predictions and visualize the training progression.
+      </li>
+    </ul>
+
+    <p>
+      I also implemented a novel view generation pipeline that:
+    </p>
+    <ul class="code-desc-list">
+      <li>
+        Constructs a camera pose that looks at the origin (assumed to be near the center of the
+        bottle) from a chosen starting position.
+      </li>
+      <li>
+        Applies a rotation around the object to produce a sequence of camera-to-world matrices
+        that orbit the scene.
+      </li>
+      <li>
+        Uses the trained NeRF to render an image from each of these poses and stitches them
+        together into a looping GIF that shows a 360-degree view of the bottle.
+      </li>
+    </ul>
+
+    <h3>Training Curves on My Bottle Dataset</h3>
+    <p>
+      The plots below show how the training loss and PSNR evolve over iterations on my custom
+      Spindrift can dataset. The loss decreases steadily while PSNR improves, indicating that the
+      model is successfully learning to reproduce the multi-view images.
+    </p>
+
+    <div class="grid-2">
+      <figure>
+        <img src="./media/my_object_train_loss_curve.jpg" alt="Training loss curve for custom object" />
+        <figcaption>Training loss over iterations on my Spindrift can dataset.</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/my_object_train_psnr_curve.jpg" alt="Training PSNR curve for custom object" />
+        <figcaption>Training PSNR over iterations on my Spindrift can dataset.</figcaption>
+      </figure>
+    </div>
+
+    <h3>Intermediate Scene Renders During Training</h3>
+    <p>
+      Using the saved checkpoints, I rendered the scene at several training milestones to
+      visualize how the NeRF gradually refines the geometry and appearance of the bottle and
+      surrounding table.
+    </p>
+
+    <div class="grid-4">
+      <figure>
+        <img src="./media/object_ds_pred_step_02500.jpg" alt="Render at 2500 iterations" />
+        <figcaption>Render after 2,500 iterations.</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/object_ds_pred_step_05000.jpg" alt="Render at 5,000 iterations" />
+        <figcaption>Render after 5,000 iterations.</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/object_ds_pred_step_07500.jpg" alt="Render at 7,500 iterations" />
+        <figcaption>Render after 7,500 iterations.</figcaption>
+      </figure>
+      <figure>
+        <img src="./media/object_ds_pred_step_10000.jpg" alt="Render at 10,000 iterations" />
+        <figcaption>Render after 10,000 iterations.</figcaption>
+      </figure>
+    </div>
+
+    <h3>360° Novel View of My Spindrift Can</h3>
+    <p>
+      Finally, using the orbit rendering pipeline, I generated a 360° GIF of the camera circling
+      my Spindrift can. This demonstrates that the trained NeRF can synthesize realistic novel
+      views from camera positions that were never seen during training.
+    </p>
+
+    <figure>
+      <img src="./media/object_orbit_rotated.gif" alt="Orbit GIF of Spindrift can" />
+      <figcaption>GIF of the camera circling my Spindrift can, showing novel views.</figcaption>
+    </figure>
+  </section>
+
+</body>
+</html>
