@@ -1,0 +1,1529 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CS 180 Project 5: Diffusion Models &amp; Flow Matching</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      --bg: #f5f5f7;
+      --fg: #111827;
+      --card-bg: #ffffff;
+      --border: #e5e7eb;
+      --accent: #2563eb;
+      --muted: #6b7280;
+      --code-bg: #0b1120;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 2rem 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+        "Segoe UI", sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+    }
+
+    main {
+      max-width: 1100px;
+      margin: 0 auto;
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 2.5rem 3rem 3rem;
+      box-shadow: 0 18px 50px rgba(15, 23, 42, 0.12);
+    }
+
+    header h1 {
+      margin-top: 0;
+      font-size: 2.1rem;
+    }
+
+    header p {
+      margin: 0.1rem 0;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+
+    h2 {
+      margin-top: 2.5rem;
+      border-bottom: 2px solid var(--border);
+      padding-bottom: 0.4rem;
+    }
+
+    h3 {
+      margin-top: 2rem;
+    }
+
+    h4 {
+      margin-top: 1.2rem;
+      margin-bottom: 0.4rem;
+    }
+
+    p {
+      line-height: 1.6;
+    }
+
+    ul, ol {
+      line-height: 1.5;
+    }
+
+    #toc {
+      background: #f9fafb;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin: 1.5rem 0 2rem;
+    }
+
+    #toc h2 {
+      border-bottom: none;
+      margin-top: 0;
+      font-size: 1.2rem;
+    }
+
+    #toc ol {
+      padding-left: 1.2rem;
+      margin: 0.4rem 0;
+    }
+
+    #toc a {
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    #toc a:hover {
+      text-decoration: underline;
+    }
+
+    .deliverable {
+      font-size: 0.95rem;
+      color: var(--muted);
+      font-style: italic;
+      margin-bottom: 0.3rem;
+    }
+
+    .analysis {
+      background: #f3f4f6;
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      border-left: 3px solid var(--accent);
+      margin: 1rem 0;
+      font-size: 0.95rem;
+    }
+
+    .image-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin: 0.8rem 0 1.4rem;
+    }
+
+    figure {
+      margin: 0;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      padding: 0.5rem;
+      background: #f9fafb;
+      flex: 1 1 180px;
+      max-width: 260px;
+    }
+
+    figure img {
+      width: 100%;
+      display: block;
+      border-radius: 6px;
+    }
+
+    figcaption {
+      margin-top: 0.35rem;
+      font-size: 0.8rem;
+      color: var(--muted);
+    }
+
+    .code-block {
+      background: var(--code-bg);
+      color: #e5e7eb;
+      border-radius: 10px;
+      padding: 0.8rem 1rem;
+      margin: 0.9rem 0 1.4rem;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+        "Liberation Mono", "Courier New", monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      border: 1px solid #020617;
+    }
+
+    .code-block code {
+      white-space: pre;
+    }
+
+    .tagline {
+      margin-top: 0.5rem;
+      font-size: 0.95rem;
+      color: var(--muted);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 0.5rem;
+    }
+
+    .anchor {
+      font-size: 0.8rem;
+      color: var(--accent);
+      text-decoration: none;
+    }
+
+    .anchor:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 800px) {
+      main {
+        padding: 1.5rem 1.4rem 2rem;
+        border-radius: 0;
+      }
+
+      .image-row {
+        justify-content: center;
+      }
+
+      figure {
+        max-width: 46%;
+      }
+    }
+
+    @media (max-width: 600px) {
+      figure {
+        max-width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>CS 180 Project 5: Diffusion Models &amp; Flow Matching</h1>
+      <p class="tagline">
+        Part A: The Power of Diffusion Models &nbsp;·&nbsp;
+        Part B: Flow Matching from Scratch (MNIST)
+      </p>
+      <p>Random seed used throughout: <strong>180</strong></p>
+    </header>
+
+    <nav id="toc">
+      <h2>Table of Contents</h2>
+      <ol>
+        <li>
+          <a href="#part-a">Part A: The Power of Diffusion Models</a>
+          <ol>
+            <li><a href="#part-a-0">Part 0: Setup</a></li>
+            <li><a href="#part-a-1-1">1.1 Forward Process</a></li>
+            <li><a href="#part-a-1-2">1.2 Classical Denoising</a></li>
+            <li><a href="#part-a-1-3">1.3 One-Step Denoising</a></li>
+            <li><a href="#part-a-1-4">1.4 Iterative Denoising</a></li>
+            <li><a href="#part-a-1-5">1.5 Diffusion Model Sampling</a></li>
+            <li><a href="#part-a-1-6">1.6 Classifier-Free Guidance (CFG)</a></li>
+            <li><a href="#part-a-1-7">1.7 Image-to-Image Translation</a></li>
+            <li><a href="#part-a-1-7-1">1.7.1 Hand-Drawn &amp; Web Image Editing</a></li>
+            <li><a href="#part-a-1-7-2">1.7.2 Inpainting</a></li>
+            <li><a href="#part-a-1-7-3">1.7.3 Text-Conditional I2I</a></li>
+            <li><a href="#part-a-1-8">1.8 Visual Anagrams</a></li>
+            <li><a href="#part-a-1-9">1.9 Hybrid Images</a></li>
+          </ol>
+        </li>
+        <li>
+          <a href="#part-b">Part B: Flow Matching from Scratch (MNIST)</a>
+          <ol>
+            <li><a href="#part-b-1-1">1.1 Unconditional UNet</a></li>
+            <li><a href="#part-b-1-2">1.2 Training a Denoiser</a></li>
+            <li><a href="#part-b-1-2-2">1.2.2 Out-of-Distribution Noise</a></li>
+            <li><a href="#part-b-1-2-3">1.2.3 Denoising Pure Noise</a></li>
+            <li><a href="#part-b-2-1">2.1 Time-Conditioned UNet</a></li>
+            <li><a href="#part-b-2-2">2.2 Training the Time-Conditioned UNet</a></li>
+            <li><a href="#part-b-2-3">2.3 Sampling from Time-Conditioned UNet</a></li>
+            <li><a href="#part-b-2-4">2.4 Class-Conditional UNet</a></li>
+            <li><a href="#part-b-2-5">2.5 Training the Class-Conditional UNet</a></li>
+            <li><a href="#part-b-2-6">2.6 Class-Conditioned Sampling &amp; Scheduler Ablation</a></li>
+          </ol>
+        </li>
+      </ol>
+    </nav>
+
+    <!-- ===================== PART A ===================== -->
+    <section id="part-a">
+      <div class="section-header">
+        <h2>Part A: The Power of Diffusion Models</h2>
+        <a class="anchor" href="#top">↑ Top</a>
+      </div>
+
+      <!-- Part 0 -->
+      <section id="part-a-0">
+        <h3>Part 0: Setup</h3>
+
+        <h4>Prompt Embeddings</h4>
+        <p class="deliverable">
+          Deliverable: Generate CLIP/text encoder embeddings for several prompts and
+          report shapes and examples.
+        </p>
+        <p>
+          I generated embeddings for <strong>29 text prompts</strong>. Each embedding has
+          shape <code>[1, 77, 4096]</code>. The prompts include:
+        </p>
+        <ul>
+          <li>a basketball</li>
+          <li>a photo of a man</li>
+          <li>a photo of sunset</li>
+          <li>a photo of mountain</li>
+          <li>a photo of a beach</li>
+          <li>an oil painting of a dog</li>
+          <li>an oil painting of a lion</li>
+          <li>an oil painting of a monk</li>
+          <li>an oil painting of a comedy show</li>
+          <li>a lithograph of the moon</li>
+          <li>a lithograph of a basketball stadium</li>
+          <li>a man in a suit</li>
+          <li>a high quality photo</li>
+          <li>a music studio</li>
+          <li>Rocket Ship</li>
+          <li>a portrait of a man's face</li>
+          <li>a guitar</li>
+          <li>Galaxy</li>
+          <li>Sunset</li>
+          <li>Smiling child</li>
+          <li>Old man face</li>
+          <li>Young woman</li>
+          <li>Apple logo</li>
+          <li>Forest landscape</li>
+          <li>a lithograph of a yin yang</li>
+          <li>a lithograph of a Skull</li>
+          <li>a photo of a fish</li>
+          <li>a photo of a diamond</li>
+        </ul>
+
+        <h4>Text-to-Image Sampling for Selected Prompts</h4>
+        <p class="deliverable">
+          Deliverable: For 3 prompts, generate images with different
+          <code>num_inference_steps</code> and compare quality.
+        </p>
+        <p>
+          I used three prompts: <em>"a guitar"</em>, <em>"a man in a suit"</em>, and
+          <em>"an oil painting of a lion"</em>. For each prompt I generated Stage 1
+          (64×64) and Stage 2 (256×256) images with
+          <code>num_inference_steps = 20</code> and <code>60</code>.
+        </p>
+
+        <h5>num_inference_steps = 20</h5>
+        <div class="image-row">
+          <figure>
+            <img src="./media/guitar_stage1_20.png" alt="Guitar, stage 1, 20 steps" />
+            <figcaption>"a guitar" – Stage 1 (64×64), 20 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/guitar_stage2_20.png" alt="Guitar, stage 2, 20 steps" />
+            <figcaption>"a guitar" – Stage 2 (256×256), 20 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/man_in_suit_stage1_20.png" alt="Man in suit, stage 1, 20 steps" />
+            <figcaption>"a man in a suit" – Stage 1 (64×64), 20 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/man_in_suit_stage2_20.png" alt="Man in suit, stage 2, 20 steps" />
+            <figcaption>"a man in a suit" – Stage 2 (256×256), 20 steps</figcaption>
+          </figure>
+        </div>
+        <div class="image-row">
+          <figure>
+            <img src="./media/oil_lion_stage1_20.png" alt="Oil lion, stage 1, 20 steps" />
+            <figcaption>"an oil painting of a lion" – Stage 1 (64×64), 20 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/oil_lion_stage2_20.png" alt="Oil lion, stage 2, 20 steps" />
+            <figcaption>"an oil painting of a lion" – Stage 2 (256×256), 20 steps</figcaption>
+          </figure>
+        </div>
+
+        <h5>num_inference_steps = 60</h5>
+        <div class="image-row">
+          <figure>
+            <img src="./media/guitar_stage1_60.png" alt="Guitar, stage 1, 60 steps" />
+            <figcaption>"a guitar" – Stage 1 (64×64), 60 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/guitar_stage2_60.png" alt="Guitar, stage 2, 60 steps" />
+            <figcaption>"a guitar" – Stage 2 (256×256), 60 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/man_in_suit_stage1_60.png" alt="Man in suit, stage 1, 60 steps" />
+            <figcaption>"a man in a suit" – Stage 1 (64×64), 60 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/man_in_suit_stage2_60.png" alt="Man in suit, stage 2, 60 steps" />
+            <figcaption>"a man in a suit" – Stage 2 (256×256), 60 steps</figcaption>
+          </figure>
+        </div>
+        <div class="image-row">
+          <figure>
+            <img src="./media/oil_lion_stage1_60.png" alt="Oil lion, stage 1, 60 steps" />
+            <figcaption>"an oil painting of a lion" – Stage 1 (64×64), 60 steps</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/oil_lion_stage2_60.png" alt="Oil lion, stage 2, 60 steps" />
+            <figcaption>"an oil painting of a lion" – Stage 2 (256×256), 60 steps</figcaption>
+          </figure>
+        </div>
+
+        <div class="analysis">
+          <strong>Analysis.</strong>
+          Increasing <code>num_inference_steps</code> from 20 to 60 visibly improves
+          image quality. With 60 steps, images have sharper edges, richer texture,
+          and a wider range of colors and brightness. Stage 1 (64×64) captures coarse
+          low-frequency structure, while Stage 2 (256×256) refines the output with
+          higher-frequency details and more realistic appearance.
+        </div>
+      </section>
+
+      <!-- 1.1 Forward Process -->
+      <section id="part-a-1-1">
+        <h3>1.1 Implementing the Forward Process</h3>
+        <p class="deliverable">
+          Deliverable: Implement <code>noisy_im = forward(im, t)</code> and visualize the
+          Campanile at multiple noise levels.
+        </p>
+        <p>
+          I implemented the DDPM forward process by sampling
+          <code>im_noisy = √ᾱ<sub>t</sub> · im + √(1 − ᾱ<sub>t</sub>) · ε</code>, where
+          <code>ε ∼ N(0, I)</code> and <code>ᾱ<sub>t</sub></code> is the cumulative product
+          of alphas at timestep <code>t</code>.
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/campanile.jpg" alt="Original Campanile 64x64" />
+            <figcaption>Original Campanile (64×64)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_image_noise_level_250.png" alt="Campanile noise level 250" />
+            <figcaption>Forward process, noise level t = 250</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_image_noise_level_500.png" alt="Campanile noise level 500" />
+            <figcaption>Forward process, noise level t = 500</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_image_noise_level_750.png" alt="Campanile noise level 750" />
+            <figcaption>Forward process, noise level t = 750</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.2 Classical Denoising -->
+      <section id="part-a-1-2">
+        <h3>1.2 Classical Denoising</h3>
+        <p class="deliverable">
+          Deliverable: For each noisy Campanile image, show the best Gaussian-denoised version.
+        </p>
+        <p>
+          I applied Gaussian blur to each noisy image with tuned parameters to remove noise
+          while preserving as much structure as possible.
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/test_image_noise_level_250.png" alt="Noisy 250" />
+            <figcaption>Noisy (t = 250)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_noisy_im_blurred_250" alt="Gaussian blurred 250" />
+            <figcaption>Gaussian-blurred (t = 250)</figcaption>
+          </figure>
+        </div>
+        <div class="image-row">
+          <figure>
+            <img src="./media/test_image_noise_level_500.png" alt="Noisy 500" />
+            <figcaption>Noisy (t = 500)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_noisy_im_blurred_500" alt="Gaussian blurred 500" />
+            <figcaption>Gaussian-blurred (t = 500)</figcaption>
+          </figure>
+        </div>
+        <div class="image-row">
+          <figure>
+            <img src="./media/test_image_noise_level_750.png" alt="Noisy 750" />
+            <figcaption>Noisy (t = 750)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_noisy_im_blurred_750" alt="Gaussian blurred 750" />
+            <figcaption>Gaussian-blurred (t = 750)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.3 One-Step Denoising -->
+      <section id="part-a-1-3">
+        <h3>1.3 One-Step Denoising</h3>
+        <p class="deliverable">
+          Deliverable: For t ∈ {250, 500, 750}, show original, noisy, and one-step denoised images.
+        </p>
+        <p>
+          For one-step denoising, I used the trained <code>stage_1.unet</code> to estimate
+          the noise at a single timestep and then reconstructed the clean image in one step.
+        </p>
+
+        <h4>t = 250</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/campanile.jpg" alt="Campanile original" />
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_noisy_im_blurred_250" alt="Noisy t=250" />
+            <figcaption>Noisy (t = 250)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/denoised_test_im_250.png" alt="One-step denoised t=250" />
+            <figcaption>One-step denoised (t = 250)</figcaption>
+          </figure>
+        </div>
+
+        <h4>t = 500</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/campanile.jpg" alt="Campanile original" />
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_noisy_im_blurred_500" alt="Noisy t=500" />
+            <figcaption>Noisy (t = 500)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/denoised_test_im_500.png" alt="One-step denoised t=500" />
+            <figcaption>One-step denoised (t = 500)</figcaption>
+          </figure>
+        </div>
+
+        <h4>t = 750</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/campanile.jpg" alt="Campanile original" />
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/test_noisy_im_blurred_750" alt="Noisy t=750" />
+            <figcaption>Noisy (t = 750)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/denoised_test_im_750.png" alt="One-step denoised t=750" />
+            <figcaption>One-step denoised (t = 750)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.4 Iterative Denoising -->
+      <section id="part-a-1-4">
+        <h3>1.4 Iterative Denoising</h3>
+        <p class="deliverable">
+          Deliverable: Implement iterative DDPM sampling with strided timesteps and
+          visualize intermediate and final results.
+        </p>
+        <p>
+          I constructed a strided schedule
+          <code>strided_timesteps = [990 - 30·i]</code> and used
+          <code>iterative_denoise</code> to iteratively update the image. At each step, I:
+        </p>
+        <ul>
+          <li>Computed <code>ᾱ<sub>t</sub></code>, <code>ᾱ<sub>t′</sub></code>, <code>α</code>, and <code>β</code>.</li>
+          <li>Used the UNet to estimate the noise, split into noise and variance.</li>
+          <li>Estimated <code>x₀</code> and then <code>x<sub>t′</sub></code> via the DDPM update rule.</li>
+          <li>Added learned variance and repeated until t = 0.</li>
+        </ul>
+
+        <h4>Intermediate Iterative Denoising</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/iter_denised_image_90.png" alt="Iterative denoising t=90" />
+            <figcaption>Iterative denoising, t = 90</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/iter_denised_image_240.png" alt="Iterative denoising t=240" />
+            <figcaption>Iterative denoising, t = 240</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/iter_denised_image_390.png" alt="Iterative denoising t=390" />
+            <figcaption>Iterative denoising, t = 390</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/iter_denised_image_540.png" alt="Iterative denoising t=540" />
+            <figcaption>Iterative denoising, t = 540</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/iter_denised_image_690.png" alt="Iterative denoising t=690" />
+            <figcaption>Iterative denoising, t = 690</figcaption>
+          </figure>
+        </div>
+
+        <h4>Final Reconstructions</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/campanile.jpg" alt="Original campanile" />
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/final_iter_denoised_camp.png" alt="Iteratively denoised campanile" />
+            <figcaption>Iteratively denoised Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/clean_one_step.png" alt="One-step denoised" />
+            <figcaption>One-step DDPM denoised Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/blur_filtered.png" alt="Gaussian blurred" />
+            <figcaption>Gaussian-blurred Campanile</figcaption>
+          </figure>
+        </div>
+
+        <div class="analysis">
+          <strong>Analysis.</strong>
+          Iterative denoising best recovers the fine, high-frequency details of the
+          Campanile while still being faithful to the overall structure, although some
+          structural distortions remain. The one-step denoised image mainly recovers
+          low-frequency content and looks noticeably blurrier. The Gaussian-blurred
+          version essentially preserves the original high-frequency noise and performs
+          the worst in terms of true denoising.
+        </div>
+      </section>
+
+      <!-- 1.5 Diffusion Model Sampling -->
+      <section id="part-a-1-5">
+        <h3>1.5 Diffusion Model Sampling</h3>
+        <p class="deliverable">
+          Deliverable: Show 5 unconditional samples from the diffusion model.
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/sample_image_0" alt="Sample image 0" />
+            <figcaption>Unconditional sample 0</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sample_image_1" alt="Sample image 1" />
+            <figcaption>Unconditional sample 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sample_image_2" alt="Sample image 2" />
+            <figcaption>Unconditional sample 2</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sample_image_3" alt="Sample image 3" />
+            <figcaption>Unconditional sample 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sample_image_4" alt="Sample image 4" />
+            <figcaption>Unconditional sample 4</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.6 CFG -->
+      <section id="part-a-1-6">
+        <h3>1.6 Classifier-Free Guidance (CFG)</h3>
+        <p class="deliverable">
+          Deliverable: Implement <code>iterative_denoise_cfg</code> and sample images
+          for the prompt <em>"a high quality photo"</em>.
+        </p>
+        <p>
+          In <code>iterative_denoise_cfg</code> I:
+        </p>
+        <ul>
+          <li>Ran the UNet twice: once conditionally and once with an unconditional embedding.</li>
+          <li>Split model outputs into noise and variance components.</li>
+          <li>
+            Computed the CFG noise estimate
+            <code>ε<sub>cfg</sub> = ε<sub>uncond</sub> + s(ε<sub>cond</sub> − ε<sub>uncond</sub>)</code>
+            with a guidance scale <code>s = 7</code>.
+          </li>
+          <li>Used this noise estimate inside the DDPM update rule.</li>
+        </ul>
+
+        <div class="image-row">
+          <figure>
+            <img src="./media/cfg_sampled_image_0.png" alt="CFG sample 0" />
+            <figcaption>CFG sample 0 – "a high quality photo"</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_sampled_image_1.png" alt="CFG sample 1" />
+            <figcaption>CFG sample 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_sampled_image_2.png" alt="CFG sample 2" />
+            <figcaption>CFG sample 2</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_sampled_image_3.png" alt="CFG sample 3" />
+            <figcaption>CFG sample 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_sampled_image_4.png" alt="CFG sample 4" />
+            <figcaption>CFG sample 4</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.7 Image-to-Image Translation -->
+      <section id="part-a-1-7">
+        <h3>1.7 Image-to-Image Translation (SDEdit)</h3>
+        <p class="deliverable">
+          Deliverable: Perform SDEdit-style image-to-image translation on the Campanile
+          and two other images for multiple noise levels using the prompt
+          <em>"a high quality photo"</em>.
+        </p>
+
+        <h4>Campanile Edits</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/campanile.jpg" alt="Campanile original" />
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_camp_image_1.png" alt="Campanile i_start 1" />
+            <figcaption>SDEdit, i_start = 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_camp_image_3.png" alt="Campanile i_start 3" />
+            <figcaption>SDEdit, i_start = 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_camp_image_5.png" alt="Campanile i_start 5" />
+            <figcaption>SDEdit, i_start = 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_camp_image_7.png" alt="Campanile i_start 7" />
+            <figcaption>SDEdit, i_start = 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_camp_image_10.png" alt="Campanile i_start 10" />
+            <figcaption>SDEdit, i_start = 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_camp_image_20.png" alt="Campanile i_start 20" />
+            <figcaption>SDEdit, i_start = 20</figcaption>
+          </figure>
+        </div>
+
+        <h4>Pineapple Edits</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/pineapple.jpg" alt="Pineapple original" />
+            <figcaption>Original pineapple image</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_pineapple_image_1.png" alt="Pineapple i_start 1" />
+            <figcaption>SDEdit, i_start = 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_pineapple_image_3.png" alt="Pineapple i_start 3" />
+            <figcaption>SDEdit, i_start = 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_pineapple_image_5.png" alt="Pineapple i_start 5" />
+            <figcaption>SDEdit, i_start = 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_pineapple_image_7.png" alt="Pineapple i_start 7" />
+            <figcaption>SDEdit, i_start = 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_pineapple_image_10.png" alt="Pineapple i_start 10" />
+            <figcaption>SDEdit, i_start = 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_pineapple_image_20.png" alt="Pineapple i_start 20" />
+            <figcaption>SDEdit, i_start = 20</figcaption>
+          </figure>
+        </div>
+
+        <h4>Picasso-Style Image Edits</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/picasso.png" alt="Picasso original" />
+            <figcaption>Original Picasso-style image</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_picasso_image_1.png" alt="Picasso i_start 1" />
+            <figcaption>SDEdit, i_start = 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_picasso_image_3.png" alt="Picasso i_start 3" />
+            <figcaption>SDEdit, i_start = 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_picasso_image_5.png" alt="Picasso i_start 5" />
+            <figcaption>SDEdit, i_start = 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_picasso_image_7.png" alt="Picasso i_start 7" />
+            <figcaption>SDEdit, i_start = 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_picasso_image_10.png" alt="Picasso i_start 10" />
+            <figcaption>SDEdit, i_start = 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/cfg_picasso_image_20.png" alt="Picasso i_start 20" />
+            <figcaption>SDEdit, i_start = 20</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.7.1 Hand-drawn & Web Images -->
+      <section id="part-a-1-7-1">
+        <h3>1.7.1 Editing Hand-Drawn &amp; Web Images</h3>
+        <p class="deliverable">
+          Deliverable: Apply SDEdit to one web image and two hand-drawn images for
+          noise levels [1, 3, 5, 7, 10, 20].
+        </p>
+
+        <h4>Camping Web Image</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/camping.png" alt="Camping original" />
+            <figcaption>Original camping image</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/web_edited_image_1.png" alt="Camping i_start 1" />
+            <figcaption>Camping, i_start = 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/web_edited_image_3.png" alt="Camping i_start 3" />
+            <figcaption>Camping, i_start = 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/web_edited_image_5.png" alt="Camping i_start 5" />
+            <figcaption>Camping, i_start = 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/web_edited_image_7.png" alt="Camping i_start 7" />
+            <figcaption>Camping, i_start = 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/web_edited_image_10.png" alt="Camping i_start 10" />
+            <figcaption>Camping, i_start = 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/web_edited_image_20.png" alt="Camping i_start 20" />
+            <figcaption>Camping, i_start = 20</figcaption>
+          </figure>
+        </div>
+
+        <h4>Hand-Drawn Dog</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/drawing1.png" alt="Hand-drawn dog original" />
+            <figcaption>Original hand-drawn dog</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn1_edited_image_1.png" alt="Dog i_start 1" />
+            <figcaption>Dog, i_start = 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn1_edited_image_3.png" alt="Dog i_start 3" />
+            <figcaption>Dog, i_start = 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn1_edited_image_5.png" alt="Dog i_start 5" />
+            <figcaption>Dog, i_start = 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn1_edited_image_7.png" alt="Dog i_start 7" />
+            <figcaption>Dog, i_start = 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn1_edited_image_10.png" alt="Dog i_start 10" />
+            <figcaption>Dog, i_start = 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn1_edited_image_20.png" alt="Dog i_start 20" />
+            <figcaption>Dog, i_start = 20</figcaption>
+          </figure>
+        </div>
+
+        <h4>Hand-Drawn House</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/drawing2.png" alt="Hand-drawn house original" />
+            <figcaption>Original hand-drawn house</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn2_edited_image_1.png" alt="House i_start 1" />
+            <figcaption>House, i_start = 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn2_edited_image_3.png" alt="House i_start 3" />
+            <figcaption>House, i_start = 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn2_edited_image_5.png" alt="House i_start 5" />
+            <figcaption>House, i_start = 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn2_edited_image_7.png" alt="House i_start 7" />
+            <figcaption>House, i_start = 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn2_edited_image_10.png" alt="House i_start 10" />
+            <figcaption>House, i_start = 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/drawn2_edited_image_20.png" alt="House i_start 20" />
+            <figcaption>House, i_start = 20</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.7.2 Inpainting -->
+      <section id="part-a-1-7-2">
+        <h3>1.7.2 Inpainting</h3>
+        <p class="deliverable">
+          Deliverable: Implement <code>inpaint</code> and show inpainting on the Campanile
+          and two additional images.
+        </p>
+        <p>
+          In <code>inpaint</code>, I initialized the image with noise and ran a CFG-style
+          denoising loop. At each step, I:
+        </p>
+        <ul>
+          <li>Computed the CFG noise estimate as in 1.6.</li>
+          <li>Stepped the image one DDPM step toward lower noise.</li>
+          <li>
+            Re-injected the original image outside the masked region using a noisy
+            version of the original at the current timestep:
+            <code>image = mask · pred_prev_image + (1 − mask) · noisy_original</code>.
+          </li>
+        </ul>
+
+        <h4>Campanile Inpainting</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/Campanile.png" alt="Campanile original" />
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/Campanile_Mask.png" alt="Campanile mask" />
+            <figcaption>Mask</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/campanile_hole_to_fill.png" alt="Campanile hole to fill" />
+            <figcaption>Hole to fill</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/Campaniele_Impainted" alt="Campanile inpainted" />
+            <figcaption>Inpainted Campanile</figcaption>
+          </figure>
+        </div>
+
+        <h4>Eye Inpainting</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/eye.png" alt="Eye original" />
+            <figcaption>Original eye image</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/radial_mask.png" alt="Eye radial mask" />
+            <figcaption>Radial mask</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/eye_hole_to_fill.png" alt="Eye hole to fill" />
+            <figcaption>Hole to fill</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/Eye_Impainted" alt="Eye inpainted" />
+            <figcaption>Inpainted eye</figcaption>
+          </figure>
+        </div>
+
+        <h4>Beach Inpainting</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/beach.png" alt="Beach original" />
+            <figcaption>Original beach image</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/blob_mask.png" alt="Beach blob mask" />
+            <figcaption>Blob mask</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/beach_hole_to_fill.png" alt="Beach hole to fill" />
+            <figcaption>Hole to fill</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/Bye_Impainted" alt="Beach inpainted" />
+            <figcaption>Inpainted beach</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.7.3 Text-Conditional I2I -->
+      <section id="part-a-1-7-3">
+        <h3>1.7.3 Text-Conditional Image-to-Image Translation</h3>
+        <p class="deliverable">
+          Deliverable: Use text prompts (e.g., "Rocket Ship", "Galaxy", "Sunset") to
+          edit images at various noise levels via classifier-free guidance.
+        </p>
+
+        <h4>Campanile → Rocket Ship</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/campanile.jpg" alt="Campanile original" />
+            <figcaption>Original Campanile</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/rocket_camp_image_1.png" alt="Rocket ship noise 1" />
+            <figcaption>Rocket ship, noise level 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/rocket_camp_image_3.png" alt="Rocket ship noise 3" />
+            <figcaption>Rocket ship, noise level 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/rocket_camp_image_5.png" alt="Rocket ship noise 5" />
+            <figcaption>Rocket ship, noise level 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/rocket_camp_image_7.png" alt="Rocket ship noise 7" />
+            <figcaption>Rocket ship, noise level 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/rocket_camp_image_10.png" alt="Rocket ship noise 10" />
+            <figcaption>Rocket ship, noise level 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/rocket_camp_image_20.png" alt="Rocket ship noise 20" />
+            <figcaption>Rocket ship, noise level 20</figcaption>
+          </figure>
+        </div>
+
+        <h4>Eye → Galaxy</h4>
+        <p>Prompt: <em>"Galaxy"</em>.</p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/eye.png" alt="Eye original" />
+            <figcaption>Original eye</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/galaxy_eye_image_1.png" alt="Galaxy eye noise 1" />
+            <figcaption>Galaxy, noise level 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/galaxy_eye_image_3.png" alt="Galaxy eye noise 3" />
+            <figcaption>Galaxy, noise level 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/galaxy_eye_image_5.png" alt="Galaxy eye noise 5" />
+            <figcaption>Galaxy, noise level 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/galaxy_eye_image_7.png" alt="Galaxy eye noise 7" />
+            <figcaption>Galaxy, noise level 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/galaxy_eye_image_10.png" alt="Galaxy eye noise 10" />
+            <figcaption>Galaxy, noise level 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/galaxy_eye_image_20.png" alt="Galaxy eye noise 20" />
+            <figcaption>Galaxy, noise level 20</figcaption>
+          </figure>
+        </div>
+
+        <h4>Beach → Sunset</h4>
+        <p>Prompt: <em>"Sunset"</em>.</p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/beach.png" alt="Beach original" />
+            <figcaption>Original beach</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sunset_beach_image_1.png" alt="Sunset beach noise 1" />
+            <figcaption>Sunset, noise level 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sunset_beach_image_3.png" alt="Sunset beach noise 3" />
+            <figcaption>Sunset, noise level 3</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sunset_beach_image_5.png" alt="Sunset beach noise 5" />
+            <figcaption>Sunset, noise level 5</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sunset_beach_image_7.png" alt="Sunset beach noise 7" />
+            <figcaption>Sunset, noise level 7</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sunset_beach_image_10.png" alt="Sunset beach noise 10" />
+            <figcaption>Sunset, noise level 10</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/sunset_beach_image_20.png" alt="Sunset beach noise 20" />
+            <figcaption>Sunset, noise level 20</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.8 Visual Anagrams -->
+      <section id="part-a-1-8">
+        <h3>1.8 Visual Anagrams</h3>
+        <p class="deliverable">
+          Deliverable: Implement <code>visual_anagrams</code> / flip illusion and show
+          two examples that change appearance when flipped.
+        </p>
+        <p>
+          My <code>make_flip_illusion</code> function jointly denoises an image and its
+          vertically flipped version with two prompts. It:
+        </p>
+        <ul>
+          <li>Computes guided noise estimates for the original and flipped images.</li>
+          <li>Flips the second noise estimate back and averages the two.</li>
+          <li>Uses the averaged noise to take a DDPM step.</li>
+        </ul>
+
+        <div class="image-row">
+          <figure>
+            <img src="./media/lion_comedy_anagram.png" alt="Lion comedy anagram" />
+            <figcaption>"an oil painting of a lion"</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/flipped_lion_comedy_anagram.png" alt="Lion comedy anagram flipped" />
+            <figcaption>Flipped – "an oil painting of a comedy show"</figcaption>
+          </figure>
+        </div>
+
+        <div class="image-row">
+          <figure>
+            <img src="./media/dog_monk_anagram.png" alt="Dog monk anagram" />
+            <figcaption>"an oil painting of a dog"</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/flipped_dog_monk_anagram.png" alt="Dog monk anagram flipped" />
+            <figcaption>Flipped – "an oil painting of a monk"</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.9 Hybrid Images -->
+      <section id="part-a-1-9">
+        <h3>1.9 Hybrid Images</h3>
+        <p class="deliverable">
+          Deliverable: Implement <code>make_hybrids</code> and show two hybrid images.
+        </p>
+        <p>
+          In <code>make_hybrids</code>, I:
+        </p>
+        <ul>
+          <li>Computed CFG noise estimates for two different prompts.</li>
+          <li>Applied a Gaussian blur to create low-pass versions.</li>
+          <li>Subtracted the low-pass from one to obtain a high-pass component.</li>
+          <li>
+            Formed a hybrid noise estimate as
+            low-pass(prompt 1) + high-pass(prompt 2), and used it in the DDPM update.
+          </li>
+        </ul>
+
+        <div class="image-row">
+          <figure>
+            <img src="./media/fish_diamond_hybrids.jpg" alt="Fish diamond hybrid" />
+            <figcaption>Hybrid: Fish (high-frequency) + Diamond (low-frequency)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/skull_yingyang_hybrid.jpg" alt="Skull yin yang hybrid" />
+            <figcaption>Hybrid: Skull (high-frequency) + Yin Yang (low-frequency)</figcaption>
+          </figure>
+        </div>
+      </section>
+    </section>
+
+    <!-- ===================== PART B ===================== -->
+    <section id="part-b">
+      <div class="section-header">
+        <h2>Part B: Flow Matching from Scratch (MNIST Dataset)</h2>
+        <a class="anchor" href="#top">↑ Top</a>
+      </div>
+
+      <!-- Part 1: Single-step denoising UNet -->
+      <section id="part-b-1-1">
+        <h3>Part 1: Training a Single-Step Denoising UNet</h3>
+
+        <h4>1.1 Implementing the UNet</h4>
+        <p class="deliverable">
+          Deliverable: Implement an unconditional UNet and visualize its architecture.
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/unconditional_unit_arch.png" alt="Unconditional UNet architecture" />
+            <figcaption>Unconditional UNet architecture</figcaption>
+          </figure>
+        </div>
+        <p>
+          My unconditional UNet is a symmetric encoder–decoder with skip connections:
+        </p>
+        <ul>
+          <li>
+            <strong>Convolutional blocks:</strong> Each <code>ConvBlock</code> applies
+            two <code>Conv → BatchNorm → GELU</code> layers.
+          </li>
+          <li>
+            <strong>Downsampling:</strong> <code>DownBlock</code> uses a stride-2
+            convolution to halve spatial resolution and then applies a <code>ConvBlock</code>.
+          </li>
+          <li>
+            <strong>Bottleneck:</strong> I use an <code>AvgPool2d</code> in
+            <code>Flatten</code> to compress to 1×1, then an <code>Unflatten</code>
+            transposed convolution to return to 7×7.
+          </li>
+          <li>
+            <strong>Upsampling:</strong> <code>UpBlock</code> uses a transposed
+            convolution to upsample and a <code>ConvBlock</code> afterward.
+          </li>
+          <li>
+            <strong>Skip connections:</strong> Outputs from encoder stages are
+            concatenated with decoder features channel-wise before the corresponding
+            up blocks and the final <code>ConvBlock</code>.
+          </li>
+          <li>
+            <strong>Output:</strong> A final 3×3 convolution maps back to the
+            input channel dimension (1 for MNIST).
+          </li>
+        </ul>
+      </section>
+
+      <!-- 1.2 Training a Denoiser -->
+      <section id="part-b-1-2">
+        <h3>1.2 Using the UNet to Train a Denoiser</h3>
+        <p class="deliverable">
+          Deliverable: Train the UNet on MNIST to denoise images corrupted with Gaussian noise.
+        </p>
+        <p>
+          I trained on the MNIST training set with batch size 256, using the UNet
+          from 1.1 (hidden dimension D = 128) and Adam with learning rate 1e-4.
+          Noise σ was sampled at each batch so the model sees new noisy versions
+          of the same images every epoch.
+        </p>
+
+        <h4>Noising Visualization</h4>
+        <p>
+          Below is the effect of increasing noise level σ ∈ {0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0}.
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_noisy_images.jpg" alt="Noisy MNIST grid" />
+            <figcaption>MNIST digits with increasing noise levels σ</figcaption>
+          </figure>
+        </div>
+
+        <h4>1.2.1 Training</h4>
+        <p>
+          The objective is to predict the clean image from a noisy input at
+          a fixed σ (0.5 for the main training curve shown below).
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_B_training_loss_curve_0.5.jpg" alt="Training loss curve sigma 0.5" />
+            <figcaption>Training loss curve (σ = 0.5)</figcaption>
+          </figure>
+        </div>
+
+        <p>
+          Sample test-time denoising results at noise level σ = 0.5 after 1 and 5 epochs:
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_denoise_0.5_results_1.jpg" alt="Denoising results epoch 1" />
+            <figcaption>Denoising at σ = 0.5 after epoch 1</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/B_denoise_0.5_results_5.jpg" alt="Denoising results epoch 5" />
+            <figcaption>Denoising at σ = 0.5 after epoch 5</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.2.2 OOD -->
+      <section id="part-b-1-2-2">
+        <h3>1.2.2 Out-of-Distribution Testing</h3>
+        <p class="deliverable">
+          Deliverable: Test the denoiser on noise levels σ ∈ {0.0, 0.2, 0.4, 0.5, 0.6, 0.8, 1.0}
+          after training.
+        </p>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_ood_noise_grid.jpg" alt="OOD noise grid" />
+            <figcaption>
+              Denoising performance across out-of-distribution noise levels σ
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 1.2.3 Denoising Pure Noise -->
+      <section id="part-b-1-2-3">
+        <h3>1.2.3 Denoising Pure Noise</h3>
+        <p class="deliverable">
+          Deliverable: Train the model to denoise pure noise and visualize training
+          curves and generated results.
+        </p>
+
+        <div class="image-row">
+          <figure>
+            <img src="./media/pure_noise_training_curve.jpg" alt="Pure noise training curve" />
+            <figcaption>Training loss curve for denoising pure noise</figcaption>
+          </figure>
+        </div>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_pure_noise_epoch_1_vs_5.jpg" alt="Pure noise epoch comparison" />
+            <figcaption>Generated outputs from pure noise (epoch 1 vs. epoch 5)</figcaption>
+          </figure>
+        </div>
+
+        <div class="analysis">
+          <strong>Analysis.</strong>
+          When training on pure noise, the outputs tend to resemble blurry "average"
+          digits. They roughly follow the overall strokes seen across the MNIST
+          dataset, but lack high-frequency detail and are not cleanly identifiable as
+          specific digits (0–9). Different noise inputs often produce very similar
+          outputs, which reflects the model collapsing toward the mean structure of
+          digits rather than learning to invert a meaningful forward process.
+        </div>
+      </section>
+
+      <!-- Part 2: Flow matching -->
+      <section id="part-b-2-1">
+        <h3>Part 2: Training a Flow Matching Model</h3>
+
+        <h4>2.1 Adding Time Conditioning to UNet</h4>
+        <p class="deliverable">
+          Deliverable: Implement a time-conditioned UNet and describe how time is injected.
+        </p>
+        <p>
+          I extended the UNet into a <code>TimeConditionalUNet</code> by:
+        </p>
+        <ul>
+          <li>Normalizing scalar timesteps <code>t ∈ [0, 1]</code>.</li>
+          <li>
+            Passing <code>t</code> through fully-connected blocks
+            (<code>FCBlock</code>) to produce time embeddings of sizes
+            <code>2·num_hiddens</code> and <code>num_hiddens</code>.
+          </li>
+          <li>
+            Reshaping these embeddings to <code>(N, C, 1, 1)</code> and broadcasting
+            them across spatial dimensions.
+          </li>
+          <li>
+            Modulating the bottleneck and early decoder features by these embeddings:
+            multiplying and/or adding them to control the network based on time.
+          </li>
+        </ul>
+      </section>
+
+      <section id="part-b-2-2">
+        <h3>2.2 Training the Time-Conditioned UNet</h3>
+        <p class="deliverable">
+          Deliverable: Train the time-conditioned UNet with the flow matching objective
+          and show the training loss curve.
+        </p>
+        <p>
+          I implemented the training step in <code>time_fm_forward</code>:
+        </p>
+        <ul>
+          <li>Sample a batch of clean images <code>x₁</code> and pure noise <code>x₀</code>.</li>
+          <li>Sample random timesteps <code>t</code> and form <code>x<sub>t</sub> = (1 − t)x₀ + t x₁</code>.</li>
+          <li>
+            Define the target flow as <code>x₁ − x₀</code> (independent of t) and
+            train the network to predict this flow from <code>x<sub>t</sub></code> and <code>t</code>.
+          </li>
+          <li>Optimize mean squared error between predicted and target flows.</li>
+        </ul>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_time_conditioned_unet_training_curve.jpg" alt="Time-conditioned UNet training curve" />
+            <figcaption>Training loss curve for time-conditioned UNet</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="part-b-2-3">
+        <h3>2.3 Sampling from the Time-Conditioned UNet</h3>
+        <p class="deliverable">
+          Deliverable: Implement sampling from the time-conditioned UNet and show
+          samples after 1, 5, and 10 epochs.
+        </p>
+        <p>
+          In <code>time_fm_sample</code> I:
+        </p>
+        <ul>
+          <li>Initialized <code>x<sub>0</sub></code> as Gaussian noise.</li>
+          <li>Used a step size <code>Δt = 1 / num_ts</code>.</li>
+          <li>
+            At each step, evaluated the UNet at the current <code>x<sub>t</sub></code>
+            and time <code>t</code>, then integrated forward with
+            <code>x<sub>t+Δt</sub> = x<sub>t</sub> + Δt · u<sub>θ</sub>(x<sub>t</sub>, t)</code>.
+          </li>
+          <li>Clamped outputs to <code>[0, 1]</code> at the end.</li>
+        </ul>
+
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_time_conditioned_unet_samples_epoch_1.jpg" alt="Time-conditioned samples epoch 1" />
+            <figcaption>Time-conditioned UNet samples after 1 epoch</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/B_time_conditioned_unet_samples_epoch_5.jpg" alt="Time-conditioned samples epoch 5" />
+            <figcaption>Time-conditioned UNet samples after 5 epochs</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/B_time_conditioned_unet_samples_epoch_10.jpg" alt="Time-conditioned samples epoch 10" />
+            <figcaption>Time-conditioned UNet samples after 10 epochs</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="part-b-2-4">
+        <h3>2.4 Adding Class-Conditioning to UNet</h3>
+        <p class="deliverable">
+          Deliverable: Implement a class-conditional UNet and describe how class
+          conditioning is injected.
+        </p>
+        <p>
+          I extended the time-conditioned UNet to a <code>ClassConditionalUNet</code> by:
+        </p>
+        <ul>
+          <li>Encoding digit labels <code>c ∈ {0, …, 9}</code> as one-hot vectors.</li>
+          <li>
+            Passing these vectors through fully-connected blocks
+            (<code>FCBlock</code>) to produce class embeddings matching the
+            time-embedding channel dimensions.
+          </li>
+          <li>
+            Using two sets of class embeddings (<code>c1</code> and <code>c2</code>) to
+            modulate the bottleneck and early decoder features, in combination with
+            the time embeddings.
+          </li>
+          <li>
+            Allowing <code>mask</code>-based dropout of the class condition (for
+            classifier-free guidance during training).
+          </li>
+        </ul>
+      </section>
+
+      <section id="part-b-2-5">
+        <h3>2.5 Training the Class-Conditional UNet</h3>
+        <p class="deliverable">
+          Deliverable: Train the class-conditional UNet with classifier-free guidance
+          style masking and show the training loss curve.
+        </p>
+        <p>
+          I implemented the class-conditional flow matching objective in
+          <code>class_fm_forward</code>:
+        </p>
+        <ul>
+          <li>One-hot encode labels into <code>c_onehot</code>.</li>
+          <li>
+            Apply dropout to conditions with probability <code>p_uncond</code> to
+            simulate unconditional training examples.
+          </li>
+          <li>
+            Sample timesteps and construct interpolated points
+            <code>x<sub>t</sub> = (1 − t)x₀ + t x₁</code> as before.
+          </li>
+          <li>
+            Define the target flow <code>x₁ − x₀</code> and minimize the MSE between
+            the network prediction and this target.
+          </li>
+        </ul>
+
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_class_conditioned_unet_training_curve.jpg" alt="Class-conditioned training curve with scheduler" />
+            <figcaption>Class-conditioned UNet training curve (with LR scheduler)</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="part-b-2-6">
+        <h3>2.6 Sampling from the Class-Conditional UNet &amp; Scheduler Ablation</h3>
+        <p class="deliverable">
+          Deliverable: Sample digits with classifier-free guidance and compare training
+          with and without the learning rate scheduler.
+        </p>
+        <p>
+          For sampling, <code>class_fm_sample</code> uses:
+        </p>
+        <ul>
+          <li>Class labels <code>c</code> encoded as one-hot vectors.</li>
+          <li>
+            Two UNet evaluations: unconditional (<code>c = 0</code>) and
+            conditional (<code>c = one-hot</code>).
+          </li>
+          <li>
+            CFG update:
+            <code>u = u_uncond + s(u_cond − u_uncond)</code> with guidance scale
+            <code>s = 5.0</code>.
+          </li>
+          <li>Forward Euler integration over time as in the time-conditioned case.</li>
+        </ul>
+
+        <h4>Sampling with Learning Rate Scheduler</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_class_conditioned_unet_samples_epoch_1.jpg" alt="Class-conditioned samples epoch 1" />
+            <figcaption>Class-conditioned samples after 1 epoch (with scheduler)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/B_class_conditioned_unet_samples_epoch_5.jpg" alt="Class-conditioned samples epoch 5" />
+            <figcaption>Class-conditioned samples after 5 epochs (with scheduler)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/B_class_conditioned_unet_samples_epoch_10.jpg" alt="Class-conditioned samples epoch 10" />
+            <figcaption>Class-conditioned samples after 10 epochs (with scheduler)</figcaption>
+          </figure>
+        </div>
+
+        <h4>Training &amp; Sampling Without the Scheduler</h4>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_class_conditioned_unet_no_sched_training_curve.jpg" alt="No-scheduler training curve" />
+            <figcaption>Class-conditioned training curve (no LR scheduler)</figcaption>
+          </figure>
+        </div>
+        <div class="image-row">
+          <figure>
+            <img src="./media/B_class_conditioned_unet_no_sched_samples_epoch_1.jpg" alt="No scheduler samples epoch 1" />
+            <figcaption>Samples after 1 epoch (no scheduler)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/B_class_conditioned_unet_no_sched_samples_epoch_5.jpg" alt="No scheduler samples epoch 5" />
+            <figcaption>Samples after 5 epochs (no scheduler)</figcaption>
+          </figure>
+          <figure>
+            <img src="./media/B_class_conditioned_unet_no_sched_samples_epoch_10.jpg" alt="No scheduler samples epoch 10" />
+            <figcaption>Samples after 10 epochs (no scheduler)</figcaption>
+          </figure>
+        </div>
+
+        <div class="analysis">
+          <strong>Analysis.</strong>
+          Removing the exponential learning rate scheduler while keeping all other
+          hyperparameters the same resulted in very similar training curves and
+          generated samples. This suggests that, for this setup, the diffusion / flow
+          matching model is fairly robust to the exact learning rate schedule. A
+          fixed learning rate performed comparably to the decayed schedule in both
+          convergence speed and sample quality.
+        </div>
+      </section>
+    </section>
+  </main>
+</body>
+</html>
