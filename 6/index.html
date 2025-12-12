@@ -138,8 +138,8 @@
     }
 
     #part-b .image-row figure {
-        flex: 0 0 420px;   /* was 180px – gives them more width */
-        max-width: 480px;  /* was 260px – makes the cards larger */
+      flex: 1 1 100%;   /* about half the row → big images, usually 2 per row */
+      max-width: 100%;
     }
 
     figure img {
@@ -1357,6 +1357,19 @@
           </li>
           <li>Optimize mean squared error between predicted and target flows.</li>
         </ul>
+
+        <p>
+          For these experiments, I used the same UNet backbone as in Part&nbsp;1
+          (hidden dimension <code>D = 128</code>) trained on the full MNIST
+          training set with batch size <code>256</code>. I optimized with Adam
+          (weight decay <code>0</code>) and a base learning rate of
+          <code>1e-4</code>, together with an exponential learning rate scheduler
+          that decays the learning rate once per epoch. The model was trained
+          for <code>10</code> epochs, which is enough for the training loss to
+          stabilize and for the samples in 2.3 to become clearly recognizable digits.
+        </p>
+
+        
         <div class="image-row">
           <figure>
             <img src="./media/B_time_conditioned_unet_training_curve.jpg" alt="Time-conditioned UNet training curve" />
@@ -1454,6 +1467,20 @@
             the network prediction and this target.
           </li>
         </ul>
+
+        <p>
+          The class-conditional UNet uses the same architecture and optimizer
+          settings as in 2.2: hidden dimension <code>D = 128</code>, batch size
+          <code>256</code>, and Adam with base learning rate <code>1e-4</code>.
+          For the curve shown below I trained for <code>10</code> epochs using
+          an exponential learning rate scheduler.
+        </p>
+        <p>
+          In the no-scheduler ablation (discussed in 2.6), I removed the learning
+          rate scheduler and instead trained the same model with a fixed learning
+          rate of <code>1e-2</code>, keeping all other hyperparameters identical.
+        </p>
+
 
         <div class="image-row">
           <figure>
